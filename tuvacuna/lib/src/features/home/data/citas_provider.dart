@@ -20,9 +20,11 @@ class CitasNotifier extends Notifier<List<Cita>> {
     return db.getCitas.where((c) => c.paciente.rut == currentUser.rut).toList();
   }
 
-  void addCita(Cita cita) {
+  bool addCita(Cita cita) {
     final db = ref.read(databaseControllerProvider);
-    db.addCita(cita);
+    if (!db.addCita(cita)) {
+      return false;
+    }
     
     // Crear notificación (Simulada)
     final notificacion = Notificacion(
@@ -34,6 +36,7 @@ class CitasNotifier extends Notifier<List<Cita>> {
     
     // Forzamos actualización de estado
     state = [...state, cita];
+    return true;
   }
 
   void updateCita(Cita oldCita, Cita newCita) {

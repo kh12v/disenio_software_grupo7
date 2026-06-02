@@ -91,8 +91,23 @@ class DatabaseController {
   List<Cita> get getCitas => citas;
   List<Notificacion> get getNotificaciones => notificaciones;
 
-  void addCita(Cita cita) {
+  bool estaHorarioDisponible(CentroVacunacion centro, DateTime fecha, String hora) {
+    return !citas.any((cita) {
+      return cita.centroVacunacion.nombreCentro == centro.nombreCentro &&
+          cita.fecha.year == fecha.year &&
+          cita.fecha.month == fecha.month &&
+          cita.fecha.day == fecha.day &&
+          cita.hora == hora;
+    });
+  }
+
+  bool addCita(Cita cita) {
+    if (!estaHorarioDisponible(cita.centroVacunacion, cita.fecha, cita.hora)) {
+      return false;
+    }
+
     citas.add(cita);
+    return true;
   }
 
   void addNotificacion(Notificacion notificacion) {

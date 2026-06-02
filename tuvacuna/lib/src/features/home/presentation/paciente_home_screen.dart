@@ -157,7 +157,15 @@ class _AgendarCitaViewState extends ConsumerState<_AgendarCitaView> {
     );
 
     // Save in Provider (which saves in DB)
-    ref.read(citasProvider.notifier).addCita(nuevaCita);
+    final citaAgendada = ref.read(citasProvider.notifier).addCita(nuevaCita);
+    if (!citaAgendada) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se puede agendar otra cita en ${_selectedCentro!.nombreCentro} a las ${nuevaCita.hora} del ${nuevaCita.fecha.day}/${nuevaCita.fecha.month}/${nuevaCita.fecha.year}'),
+        ),
+      );
+      return;
+    }
 
     // Get the latest notification added
     final notificacion = db.getNotificaciones.last;
