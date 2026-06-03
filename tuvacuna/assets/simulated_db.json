@@ -1,0 +1,76 @@
+{
+  "campanas": [
+    {
+      "nombre_campaña": "Campaña Invierno 2026 contra la Influenza",
+      "enfermedad_objetivo": "Influenza",
+      "fecha_inicio": "2026-05-01T00:00:00.000Z",
+      "fecha_fin": "2026-08-31T23:59:59.000Z",
+      "poblacion_objetivo": "Adultos mayores y enfermos crónicos"
+    }
+  ],
+  "personas": [
+    {
+      "rut": "00.000.000-0",
+      "nombres": "Pedro Antonio",
+      "apellidos": "Lagos Valdés",
+      "cargo": "Director General"
+    },
+    {
+      "rut": "11.111.111-1",
+      "licencia": "MED-12345",
+      "nombres": "María Paz",
+      "apellidos": "Silva Ruiz",
+      "especialidad": "Enfermera",
+      "centro_trabajo": "CESFAM San Juan"
+    },
+    {
+      "rut": "22.222.222-2",
+      "nombres": "Juan Pablo",
+      "apellidos": "Pérez González",
+      "fecha_nacimiento": "1980-05-15T00:00:00.000Z",
+      "telefono": "+56912345678",
+      "correo": "juan.perez@email.com"
+    }
+  ],
+  "centros": [
+    {
+      "nombre_centro": "CESFAM San Juan",
+      "direccion": "Av. Principal 123",
+      "tipo_financiamiento": "Público",
+      "capacidad_atencion": 150,
+      "horario_atencion": "08:00 - 17:00",
+      "stock_vacunas": {
+        "Vacuna Influenza": 200,
+        "Vacuna Covid19": 50
+      }
+    }
+  ],
+  "especialistas": [
+    {
+      "rut": "11.111.111-1",
+      "licencia": "MED-12345",
+      "nombres": "María Paz",
+      "apellidos": "Silva Ruiz",
+      "especialidad": "Enfermera",
+      "centro_trabajo": "CESFAM San Juan"
+    }
+  ],
+  "vacunas": [
+    {
+      "nombre": "Vacuna Influenza",
+      "enfermedades": ["Influenza A", "Influenza B"]
+    },
+    {
+      "nombre": "Vacuna Covid19",
+      "enfermedades": ["SARS-CoV-2"]
+    }
+  ],
+  "organizadores": [
+    {
+      "rut": "00.000.000-0",
+      "nombres": "Pedro Antonio",
+      "apellidos": "Lagos Valdés",
+      "cargo": "Director General"
+    }
+  ]
+}
