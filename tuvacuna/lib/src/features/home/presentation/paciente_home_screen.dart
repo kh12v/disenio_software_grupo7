@@ -36,19 +36,16 @@ class _PacienteHomeScreenState extends ConsumerState<PacienteHomeScreen> {
           ),
         ],
       ),
-      body: _currentIndex == 0 
-          ? const _MisCitasView() 
-          : _currentIndex == 1 
-              ? const _AgendarCitaView()
-              : const _HistorialView(),
+      body: _currentIndex == 0
+          ? const _MisCitasView()
+          : _currentIndex == 1
+          ? const _AgendarCitaView()
+          : const _HistorialView(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Mis Citas',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Mis Citas'),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle),
             label: 'Agendar Cita',
@@ -76,7 +73,10 @@ class _HistorialView extends ConsumerWidget {
     final controlador = ControladorConsulta();
     List<String> historialEnfermedades = [];
     try {
-      historialEnfermedades = controlador.obtenerHistorialVanucacion(user.rut, db);
+      historialEnfermedades = controlador.obtenerHistorialVanucacion(
+        user.rut,
+        db,
+      );
     } catch (e) {
       // Ignore if not found
     }
@@ -155,8 +155,12 @@ class _MisCitasView extends ConsumerWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   leading: const Icon(Icons.event, color: Colors.green),
-                  title: Text('${cita.fecha.day}/${cita.fecha.month}/${cita.fecha.year} - ${cita.hora}'),
-                  subtitle: Text('${cita.centroVacunacion.nombreCentro}\nEstado: ${cita.estadoCita}'),
+                  title: Text(
+                    '${cita.fecha.day}/${cita.fecha.month}/${cita.fecha.year} - ${cita.hora}',
+                  ),
+                  subtitle: Text(
+                    '${cita.centroVacunacion.nombreCentro}\nEstado: ${cita.estadoCita.name()}',
+                  ),
                   isThreeLine: true,
                 ),
               );
@@ -181,10 +185,17 @@ class _AgendarCitaViewState extends ConsumerState<_AgendarCitaView> {
   String? _selectedHorario;
 
   // Opciones simuladas
-  final List<String> _horariosSimulados = ['10:00 (02/07)', '12:30 (02/07)', '16:00 (02/07)', '09:00 (03/07)'];
+  final List<String> _horariosSimulados = [
+    '10:00 (02/07)',
+    '12:30 (02/07)',
+    '16:00 (02/07)',
+    '09:00 (03/07)',
+  ];
 
   void _confirmarCita() {
-    if (_selectedCampana == null || _selectedCentro == null || _selectedHorario == null) {
+    if (_selectedCampana == null ||
+        _selectedCentro == null ||
+        _selectedHorario == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, completa todas las opciones')),
       );
@@ -195,10 +206,18 @@ class _AgendarCitaViewState extends ConsumerState<_AgendarCitaView> {
     final db = ref.read(databaseControllerProvider);
 
     // Assign a specialist that works in the selected center
-    final especialistasEnCentro = db.getEspecialistas.where((e) => e.centroTrabajo?.nombreCentro == _selectedCentro!.nombreCentro).toList();
+    final especialistasEnCentro = db.getEspecialistas
+        .where(
+          (e) => e.centroTrabajo?.nombreCentro == _selectedCentro!.nombreCentro,
+        )
+        .toList();
     if (especialistasEnCentro.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No hay especialistas disponibles en el centro ${_selectedCentro!.nombreCentro}')),
+        SnackBar(
+          content: Text(
+            'No hay especialistas disponibles en el centro ${_selectedCentro!.nombreCentro}',
+          ),
+        ),
       );
       return;
     }
@@ -212,16 +231,16 @@ class _AgendarCitaViewState extends ConsumerState<_AgendarCitaView> {
     try {
       final controlAgendamiento = ControlAgendamiento();
       final nuevaCita = controlAgendamiento.agendarCita(
-        user!.rut, 
-        _selectedCentro!.id, 
+        user!.rut,
+        _selectedCentro!.id,
         especialista.rut,
-        fecha, 
+        fecha,
         hora,
-        db
+        db,
       );
 
       final citaParaUI = nuevaCita.copyWith(campana: _selectedCampana);
-      
+
       final citaAgendada = ref.read(citasProvider.notifier).addCita(citaParaUI);
 
       if (!citaAgendada) {
@@ -243,12 +262,21 @@ class _AgendarCitaViewState extends ConsumerState<_AgendarCitaView> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Se ha creado tu cita exitosamente.', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Se ha creado tu cita exitosamente.',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 16),
-              const Text('Notificación Simulada:', style: TextStyle(color: Colors.grey)),
+              const Text(
+                'Notificación Simulada:',
+                style: TextStyle(color: Colors.grey),
+              ),
               Text('Canal: ${notificacion.canalEnvio}'),
               const SizedBox(height: 8),
-              Text(notificacion.mensaje, style: const TextStyle(fontStyle: FontStyle.italic)),
+              Text(
+                notificacion.mensaje,
+                style: const TextStyle(fontStyle: FontStyle.italic),
+              ),
             ],
           ),
           actions: [
@@ -262,14 +290,14 @@ class _AgendarCitaViewState extends ConsumerState<_AgendarCitaView> {
                 });
               },
               child: const Text('Aceptar'),
-            )
+            ),
           ],
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al agendar cita: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al agendar cita: $e')));
     }
   }
 
@@ -284,39 +312,66 @@ class _AgendarCitaViewState extends ConsumerState<_AgendarCitaView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('1. Selecciona una Campaña', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            '1. Selecciona una Campaña',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(4)),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(4),
+            ),
             child: DropdownButton<Campana>(
               value: _selectedCampana,
               isExpanded: true,
               underline: const SizedBox(),
               hint: const Text('Elige una campaña'),
-              items: campanas.map((c) => DropdownMenuItem(value: c, child: Text(c.nombreCampana))).toList(),
+              items: campanas
+                  .map(
+                    (c) => DropdownMenuItem(
+                      value: c,
+                      child: Text(c.nombreCampana),
+                    ),
+                  )
+                  .toList(),
               onChanged: (val) => setState(() => _selectedCampana = val),
             ),
           ),
           const SizedBox(height: 24),
-          
-          const Text('2. Selecciona un Centro de Vacunación', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+
+          const Text(
+            '2. Selecciona un Centro de Vacunación',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(4)),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(4),
+            ),
             child: DropdownButton<CentroVacunacion>(
               value: _selectedCentro,
               isExpanded: true,
               underline: const SizedBox(),
               hint: const Text('Elige un centro'),
-              items: centros.map((c) => DropdownMenuItem(value: c, child: Text(c.nombreCentro))).toList(),
+              items: centros
+                  .map(
+                    (c) =>
+                        DropdownMenuItem(value: c, child: Text(c.nombreCentro)),
+                  )
+                  .toList(),
               onChanged: (val) => setState(() => _selectedCentro = val),
             ),
           ),
           const SizedBox(height: 24),
 
-          const Text('3. Selecciona Horario Disponible', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            '3. Selecciona Horario Disponible',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8.0,

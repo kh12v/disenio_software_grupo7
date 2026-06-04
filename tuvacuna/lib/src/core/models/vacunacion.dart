@@ -17,4 +17,14 @@ class Vacunacion {
     required this.vacunaAplicada,
     required this.especialistaAdministrador,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'fecha_aplicacion': fechaAplicacion.toIso8601String(),
+      'numero_dosis': numeroDosis,
+      'observaciones_reacciones': observacionesReacciones,
+      'vacuna_aplicada': vacunaAplicada.nombre,
+      'especialista_administrador': especialistaAdministrador.rut,
+    };
+  }
 }

@@ -8,4 +8,12 @@ class Notificacion {
     required this.canalEnvio,
     required this.fechaEnvio,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'mensaje': mensaje,
+      'canal_envio': canalEnvio,
+      'fecha_envio': fechaEnvio.toIso8601String(),
+    };
+  }
 }

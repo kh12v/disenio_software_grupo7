@@ -140,6 +140,8 @@ class DatabaseController {
       'especialistas': especialistas.map((e) => e.toJson()).toList(),
       'vacunas': vacunas.map((v) => v.toJson()).toList(),
       'organizadores': organizadores.map((o) => o.toJson()).toList(),
+      'citas': citas.map((c) => c.toJson()).toList(),
+      'notificaciones': notificaciones.map((n) => n.toJson()).toList(),
     };
     return json.encode(data);
   }

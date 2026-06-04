@@ -4,6 +4,8 @@ import '../../auth/data/auth_repository.dart';
 import '../data/citas_provider.dart';
 import '../../../core/models/cita.dart';
 import '../../../core/models/vacunacion.dart';
+import '../../../core/models/estado_confirmada.dart';
+import '../../../core/models/estado_cancelada.dart';
 import '../../../core/data/database_controller.dart';
 
 class EspecialistaHomeScreen extends ConsumerWidget {
@@ -47,20 +49,39 @@ class EspecialistaHomeScreen extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final cita = citas[index];
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         child: ListTile(
                           leading: Icon(
-                            cita.estadoCita == 'Pendiente' ? Icons.schedule :
-                            cita.estadoCita == 'Completa' ? Icons.check_circle : Icons.cancel,
-                            color: cita.estadoCita == 'Pendiente' ? Colors.orange :
-                                   cita.estadoCita == 'Completa' ? Colors.green : Colors.red,
+                            cita.estadoCita.name() == 'Pendiente'
+                                ? Icons.schedule
+                                : cita.estadoCita.name() == 'Completa'
+                                ? Icons.check_circle
+                                : Icons.cancel,
+                            color: cita.estadoCita.name() == 'Pendiente'
+                                ? Colors.orange
+                                : cita.estadoCita.name() == 'Completa'
+                                ? Colors.green
+                                : Colors.red,
                           ),
-                          title: Text('Paciente: ${cita.paciente.nombres} ${cita.paciente.apellidos}'),
-                          subtitle: Text('Fecha: ${cita.fecha.day}/${cita.fecha.month}/${cita.fecha.year} - ${cita.hora}\nEstado: ${cita.estadoCita}'),
+                          title: Text(
+                            'Paciente: ${cita.paciente.nombres} ${cita.paciente.apellidos}',
+                          ),
+                          subtitle: Text(
+                            'Fecha: ${cita.fecha.day}/${cita.fecha.month}/${cita.fecha.year} - ${cita.hora}\nEstado: ${cita.estadoCita.name()}',
+                          ),
                           isThreeLine: true,
-                          onTap: cita.estadoCita == 'Pendiente' ? () {
-                            _mostrarDialogoGestionCita(context, ref, cita);
-                          } : null,
+                          onTap: cita.estadoCita.name() == 'Pendiente'
+                              ? () {
+                                  _mostrarDialogoGestionCita(
+                                    context,
+                                    ref,
+                                    cita,
+                                  );
+                                }
+                              : null,
                         ),
                       );
                     },
@@ -71,7 +92,11 @@ class EspecialistaHomeScreen extends ConsumerWidget {
     );
   }
 
-  void _mostrarDialogoGestionCita(BuildContext parentContext, WidgetRef ref, Cita cita) {
+  void _mostrarDialogoGestionCita(
+    BuildContext parentContext,
+    WidgetRef ref,
+    Cita cita,
+  ) {
     bool dosisAdministrada = true;
     final dosisController = TextEditingController(text: '1');
     final obsController = TextEditingController();
@@ -109,7 +134,9 @@ class EspecialistaHomeScreen extends ConsumerWidget {
                     TextField(
                       controller: obsController,
                       decoration: InputDecoration(
-                        labelText: dosisAdministrada ? 'Observaciones/Reacciones' : 'Motivo de Cancelación (Requerido)',
+                        labelText: dosisAdministrada
+                            ? 'Observaciones/Reacciones'
+                            : 'Motivo de Cancelación (Requerido)',
                         border: const OutlineInputBorder(),
                       ),
                       maxLines: 3,
@@ -119,8 +146,8 @@ class EspecialistaHomeScreen extends ConsumerWidget {
                       const Text(
                         'Al confirmar, esta cita será marcada como Cancelada.',
                         style: TextStyle(color: Colors.red),
-                      )
-                    ]
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -136,7 +163,7 @@ class EspecialistaHomeScreen extends ConsumerWidget {
                   ),
                   onPressed: () {
                     final db = ref.read(databaseControllerProvider);
-                    
+
                     Cita nuevaCita;
                     if (dosisAdministrada) {
                       final vacunacion = Vacunacion(
@@ -147,21 +174,25 @@ class EspecialistaHomeScreen extends ConsumerWidget {
                         especialistaAdministrador: cita.especialista,
                       );
                       nuevaCita = cita.copyWith(
-                        estadoCita: 'Completa',
                         vacunacion: vacunacion,
                         observaciones: obsController.text,
                       );
+                      nuevaCita.estadoCita = EstadoConfirmada(nuevaCita);
                     } else {
                       nuevaCita = cita.copyWith(
-                        estadoCita: 'Cancelada',
                         observaciones: obsController.text,
                       );
+                      nuevaCita.estadoCita = EstadoCancelada(nuevaCita);
                     }
 
-                    ref.read(citasProvider.notifier).updateCita(cita, nuevaCita);
-                    
-                    Navigator.pop(dialogContext); // Pops the first dialog safely
-                    
+                    ref
+                        .read(citasProvider.notifier)
+                        .updateCita(cita, nuevaCita);
+
+                    Navigator.pop(
+                      dialogContext,
+                    ); // Pops the first dialog safely
+
                     // Show Notification popup
                     final notificacion = db.getNotificaciones.last;
                     showDialog(
@@ -172,18 +203,28 @@ class EspecialistaHomeScreen extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Canal: email', style: TextStyle(color: Colors.grey)),
+                            const Text(
+                              'Canal: email',
+                              style: TextStyle(color: Colors.grey),
+                            ),
                             const SizedBox(height: 8),
-                            Text(notificacion.mensaje, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Text(
+                              notificacion.mensaje,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                         actions: [
                           TextButton(
-                            onPressed: () => Navigator.pop(popupContext), // Pops the notification dialog
+                            onPressed: () => Navigator.pop(
+                              popupContext,
+                            ), // Pops the notification dialog
                             child: const Text('Aceptar'),
-                          )
+                          ),
                         ],
-                      )
+                      ),
                     );
                   },
                   child: const Text('Confirmar'),
