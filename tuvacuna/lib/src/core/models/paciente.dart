@@ -1,3 +1,6 @@
+import '../data/database_controller.dart';
+import 'cita.dart';
+
 class Paciente {
   final String rut;
   final String nombres;
@@ -37,5 +40,9 @@ class Paciente {
       if (telefono != null) 'telefono': telefono,
       if (correo != null) 'correo': correo,
     };
+  }
+
+  List<Cita> getHistorial(DatabaseController db) {
+    return db.getCitas.where((cita) => cita.paciente.rut == rut).toList();
   }
 }

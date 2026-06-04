@@ -3,6 +3,7 @@ import 'paciente.dart';
 import 'especialista_salud.dart';
 import 'vacunacion.dart';
 import 'campana.dart';
+import 'vacuna.dart';
 
 class Cita {
   final DateTime fecha;
@@ -53,6 +54,18 @@ class Cita {
       observaciones: observaciones ?? this.observaciones,
       campana: campana ?? this.campana,
     );
+  }
+
+  Vacuna? getInfoVacuna() {
+    return vacunacion?.vacunaAplicada;
+  }
+
+  List<String> getDetalleVacunacion() {
+    final vacuna = getInfoVacuna();
+    if (vacuna != null) {
+      return vacuna.getEnfermedades();
+    }
+    return [];
   }
 
   static Cita create(DateTime fecha, String hora, Paciente p, CentroVacunacion centro, EspecialistaSalud especialista) {

@@ -6,6 +6,7 @@ import '../../../core/models/campana.dart';
 import '../../../core/models/centro_vacunacion.dart';
 import '../../../core/models/cita.dart';
 import '../../../core/models/control_agendamiento.dart';
+import '../../../core/models/controlador_consulta.dart';
 import '../data/citas_provider.dart';
 
 class PacienteHomeScreen extends ConsumerStatefulWidget {
@@ -35,7 +36,11 @@ class _PacienteHomeScreenState extends ConsumerState<PacienteHomeScreen> {
           ),
         ],
       ),
-      body: _currentIndex == 0 ? const _MisCitasView() : const _AgendarCitaView(),
+      body: _currentIndex == 0 
+          ? const _MisCitasView() 
+          : _currentIndex == 1 
+              ? const _AgendarCitaView()
+              : const _HistorialView(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -48,8 +53,68 @@ class _PacienteHomeScreenState extends ConsumerState<PacienteHomeScreen> {
             icon: Icon(Icons.add_circle),
             label: 'Agendar Cita',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Historial',
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _HistorialView extends ConsumerWidget {
+  const _HistorialView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final db = ref.watch(databaseControllerProvider);
+    final user = ref.watch(authStateProvider);
+
+    if (user == null) return const SizedBox();
+
+    final controlador = ControladorConsulta();
+    List<String> historialEnfermedades = [];
+    try {
+      historialEnfermedades = controlador.obtenerHistorialVanucacion(user.rut, db);
+    } catch (e) {
+      // Ignore if not found
+    }
+
+    if (historialEnfermedades.isEmpty) {
+      return const Center(
+        child: Text(
+          'No hay un historial de vacunación disponible.',
+          style: TextStyle(fontSize: 18),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Enfermedades Inmunizadas (Historial)',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: historialEnfermedades.length,
+            itemBuilder: (context, index) {
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: ListTile(
+                  leading: const Icon(Icons.shield, color: Colors.blue),
+                  title: Text(historialEnfermedades[index]),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

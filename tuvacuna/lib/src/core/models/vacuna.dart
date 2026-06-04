@@ -20,4 +20,8 @@ class Vacuna {
       'enfermedades': enfermedades,
     };
   }
+
+  List<String> getEnfermedades() {
+    return enfermedades;
+  }
 }
