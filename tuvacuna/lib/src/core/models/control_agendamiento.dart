@@ -1,8 +1,6 @@
 import 'centro_vacunacion.dart';
-import 'vacuna.dart';
 import 'cita.dart';
 import '../data/database_controller.dart';
-import 'cita.dart';
 
 class ControlAgendamiento {
   Cita agendarCita(String rutPaciente, String idCentro, String rutEspecialista, DateTime fecha, String hora, DatabaseController db) {

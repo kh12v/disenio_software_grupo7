@@ -1,5 +1,4 @@
 import '../data/database_controller.dart';
-import 'paciente.dart';
 
 class ControladorConsulta {
   List<String> obtenerHistorialVanucacion(String rutPaciente, DatabaseController db) {

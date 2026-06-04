@@ -3,8 +3,7 @@ import 'package:tuvacuna/src/core/models/cita.dart';
 import 'package:tuvacuna/src/core/models/vacunacion.dart';
 
 class EstadoCancelada implements EstadoCita {
-  EstadoCancelada(this._cita);
-  final Cita _cita;
+  EstadoCancelada(Cita _);
 
   @override
   void cancelar() {

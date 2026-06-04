@@ -4,7 +4,6 @@ import '../../auth/data/auth_repository.dart';
 import '../../../core/data/database_controller.dart';
 import '../../../core/models/campana.dart';
 import '../../../core/models/centro_vacunacion.dart';
-import '../../../core/models/cita.dart';
 import '../../../core/models/control_agendamiento.dart';
 import '../../../core/models/controlador_consulta.dart';
 import '../data/citas_provider.dart';

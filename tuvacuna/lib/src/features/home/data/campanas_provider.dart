@@ -33,7 +33,7 @@ class CampanasNotifier extends Notifier<List<Campana>> {
   int countSuccessfulVaccinations(Campana campana) {
     final db = ref.read(databaseControllerProvider);
     return db.citas.where((cita) {
-      return cita.estadoCita == 'Completa' && 
+      return cita.estadoCita.name() == 'Completa' &&
              cita.campana?.nombreCampana == campana.nombreCampana;
     }).length;
   }
