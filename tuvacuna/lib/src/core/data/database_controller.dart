@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/campana.dart';
@@ -31,6 +32,28 @@ class DatabaseController {
 
     try {
       final jsonString = await rootBundle.loadString('assets/simulated_db.json');
+      _parseJson(jsonString);
+    } catch (e) {
+      print('Error al cargar la base de datos simulada: $e');
+    }
+  }
+
+  void initDatabaseSync() {
+    if (_isInitialized) return;
+
+    try {
+      final file = File('assets/simulated_db.json');
+      if (file.existsSync()) {
+        final jsonString = file.readAsStringSync();
+        _parseJson(jsonString);
+      }
+    } catch (e) {
+      print('Error al cargar la base de datos de forma síncrona: $e');
+    }
+  }
+
+  void _parseJson(String jsonString) {
+    try {
       final Map<String, dynamic> data = json.decode(jsonString);
 
       if (data['vacunas'] != null) {
@@ -42,12 +65,6 @@ class DatabaseController {
       if (data['campanas'] != null) {
         campanas = (data['campanas'] as List)
             .map((e) => Campana.fromJson(e as Map<String, dynamic>))
-            .toList();
-      }
-
-      if (data['personas'] != null) {
-        personas = (data['personas'] as List)
-            .map((e) => Paciente.fromJson(e as Map<String, dynamic>))
             .toList();
       }
 
@@ -77,7 +94,7 @@ class DatabaseController {
 
       _isInitialized = true;
     } catch (e) {
-      print('Error al cargar la base de datos simulada: $e');
+      print('Error parsing JSON: $e');
     }
   }
 

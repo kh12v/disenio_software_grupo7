@@ -5,6 +5,7 @@ import '../../../core/data/database_controller.dart';
 import '../../../core/models/campana.dart';
 import '../../../core/models/centro_vacunacion.dart';
 import '../../../core/models/cita.dart';
+import '../../../core/models/control_agendamiento.dart';
 import '../data/citas_provider.dart';
 
 class PacienteHomeScreen extends ConsumerStatefulWidget {
@@ -125,12 +126,9 @@ class _AgendarCitaViewState extends ConsumerState<_AgendarCitaView> {
       return;
     }
 
-    final db = ref.read(databaseControllerProvider);
     final user = ref.read(authStateProvider);
-    
-    // Find the Paciente
-    final paciente = db.getPersonas.firstWhere((p) => p.rut == user?.rut);
-    
+    final db = ref.read(databaseControllerProvider);
+
     // Assign a specialist that works in the selected center
     final especialistasEnCentro = db.getEspecialistas.where((e) => e.centroTrabajo?.nombreCentro == _selectedCentro!.nombreCentro).toList();
     if (especialistasEnCentro.isEmpty) {
@@ -146,62 +144,68 @@ class _AgendarCitaViewState extends ConsumerState<_AgendarCitaView> {
     final fecha = DateTime(2026, 7, isJuly2 ? 2 : 3);
     final hora = _selectedHorario!.substring(0, 5);
 
-    final nuevaCita = Cita(
-      fecha: fecha,
-      hora: hora,
-      estadoCita: 'Pendiente',
-      centroVacunacion: _selectedCentro!,
-      paciente: paciente,
-      especialista: especialista,
-      campana: _selectedCampana,
-    );
-
-    // Save in Provider (which saves in DB)
-    final citaAgendada = ref.read(citasProvider.notifier).addCita(nuevaCita);
-    if (!citaAgendada) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No se puede agendar otra cita en ${_selectedCentro!.nombreCentro} a las ${nuevaCita.hora} del ${nuevaCita.fecha.day}/${nuevaCita.fecha.month}/${nuevaCita.fecha.year}'),
-        ),
+    try {
+      final controlAgendamiento = ControlAgendamiento();
+      final nuevaCita = controlAgendamiento.agendarCita(
+        user!.rut, 
+        _selectedCentro!.id, 
+        especialista.rut,
+        fecha, 
+        hora,
+        db
       );
-      return;
-    }
 
-    // Get the latest notification added
-    final notificacion = db.getNotificaciones.last;
+      final citaParaUI = nuevaCita.copyWith(campana: _selectedCampana);
+      
+      final citaAgendada = ref.read(citasProvider.notifier).addCita(citaParaUI);
 
-    // Show Notification Popup
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('¡Cita Confirmada!'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Se ha creado tu cita exitosamente.', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            const Text('Notificación Simulada:', style: TextStyle(color: Colors.grey)),
-            Text('Canal: ${notificacion.canalEnvio}'),
-            const SizedBox(height: 8),
-            Text(notificacion.mensaje, style: const TextStyle(fontStyle: FontStyle.italic)),
+      if (!citaAgendada) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ya existe una cita en este horario')),
+        );
+        return;
+      }
+
+      // Get the latest notification added
+      final notificacion = db.getNotificaciones.last;
+
+      // Show Notification Popup
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('¡Cita Confirmada!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Se ha creado tu cita exitosamente.', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              const Text('Notificación Simulada:', style: TextStyle(color: Colors.grey)),
+              Text('Canal: ${notificacion.canalEnvio}'),
+              const SizedBox(height: 8),
+              Text(notificacion.mensaje, style: const TextStyle(fontStyle: FontStyle.italic)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                setState(() {
+                  _selectedCampana = null;
+                  _selectedCentro = null;
+                  _selectedHorario = null;
+                });
+              },
+              child: const Text('Aceptar'),
+            )
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              setState(() {
-                _selectedCampana = null;
-                _selectedCentro = null;
-                _selectedHorario = null;
-              });
-            },
-            child: const Text('Aceptar'),
-          )
-        ],
-      ),
-    );
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al agendar cita: $e')),
+      );
+    }
   }
 
   @override

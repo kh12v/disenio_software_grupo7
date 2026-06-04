@@ -54,4 +54,15 @@ class Cita {
       campana: campana ?? this.campana,
     );
   }
+
+  static Cita create(DateTime fecha, String hora, Paciente p, CentroVacunacion centro, EspecialistaSalud especialista) {
+    return Cita(
+      fecha: fecha,
+      hora: hora,
+      estadoCita: 'Pendiente',
+      centroVacunacion: centro,
+      paciente: p,
+      especialista: especialista,
+    );
+  }
 }

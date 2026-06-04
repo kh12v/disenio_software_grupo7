@@ -34,6 +34,7 @@
   ],
   "centros": [
     {
+      "id": "C-001",
       "nombre_centro": "CESFAM San Juan",
       "direccion": "Av. Principal 123",
       "tipo_financiamiento": "Público",
