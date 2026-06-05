@@ -32,7 +32,7 @@ class CentroVacunacion {
     stockMap.forEach((key, value) {
       final vacuna = todasLasVacunas.firstWhere(
         (v) => v.nombre == key, 
-        orElse: () => Vacuna(nombre: key, enfermedades: []),
+        orElse: () => Vacuna(id: 0, nombre: key, enfermedades: []),
       );
       stockVacunas[vacuna] = value as int;
     });

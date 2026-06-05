@@ -23,7 +23,7 @@ class DatabaseController {
   List<Vacuna> vacunas = [];
   List<Organizador> organizadores = [];
   List<Cita> citas = [];
-  List<Notificacion> notificaciones = [];
+  List<INotificacion> notificaciones = [];
 
   bool _isInitialized = false;
 
@@ -106,7 +106,7 @@ class DatabaseController {
   List<Vacuna> get getVacunas => vacunas;
   List<Organizador> get getOrganizadores => organizadores;
   List<Cita> get getCitas => citas;
-  List<Notificacion> get getNotificaciones => notificaciones;
+  List<INotificacion> get getNotificaciones => notificaciones;
 
   bool estaHorarioDisponible(CentroVacunacion centro, DateTime fecha, String hora) {
     return !citas.any((cita) {
@@ -127,7 +127,7 @@ class DatabaseController {
     return true;
   }
 
-  void addNotificacion(Notificacion notificacion) {
+  void addNotificacion(INotificacion notificacion) {
     notificaciones.add(notificacion);
   }
 

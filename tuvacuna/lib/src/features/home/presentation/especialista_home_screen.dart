@@ -137,7 +137,10 @@ class EspecialistaHomeScreen extends ConsumerWidget {
                   onPressed: () {
                     final db = ref.read(databaseControllerProvider);
                     
-                    Cita nuevaCita;
+                    Cita nuevaCita = cita.copyWith(
+                      observaciones: obsController.text,
+                    );
+
                     if (dosisAdministrada) {
                       final vacunacion = Vacunacion(
                         fechaAplicacion: DateTime.now(),
@@ -146,16 +149,13 @@ class EspecialistaHomeScreen extends ConsumerWidget {
                         vacunaAplicada: db.getVacunas.first,
                         especialistaAdministrador: cita.especialista,
                       );
-                      nuevaCita = cita.copyWith(
-                        estadoCita: 'Completa',
-                        vacunacion: vacunacion,
-                        observaciones: obsController.text,
-                      );
+                      
+                      // Using State Pattern method to transition state and assign Vacunacion
+                      nuevaCita.registrarVacunacion(vacunacion);
+                      
                     } else {
-                      nuevaCita = cita.copyWith(
-                        estadoCita: 'Cancelada',
-                        observaciones: obsController.text,
-                      );
+                      // Using State Pattern method to transition state to Canceled
+                      nuevaCita.cancelar();
                     }
 
                     ref.read(citasProvider.notifier).updateCita(cita, nuevaCita);

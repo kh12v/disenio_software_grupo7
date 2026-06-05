@@ -4,6 +4,7 @@ import '../../../core/models/cita.dart';
 import '../../../core/models/notificacion.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/app_user.dart';
+import '../../../core/models/controlador_vacunacion.dart';
 
 class CitasNotifier extends Notifier<List<Cita>> {
   @override
@@ -26,12 +27,13 @@ class CitasNotifier extends Notifier<List<Cita>> {
       return false;
     }
     
-    // Crear notificación (Simulada)
-    final notificacion = Notificacion(
-      mensaje: 'Nueva cita agendada en ${cita.centroVacunacion.nombreCentro} para el ${cita.fecha.day}/${cita.fecha.month}/${cita.fecha.year} a las ${cita.hora}',
-      canalEnvio: 'email',
-      fechaEnvio: DateTime.now(),
-    );
+    // Factory Method para notificación
+    CreadorNotificacion creador = CreadorNotifEmail(); // Opcionalmente usar CreadorNotifSMS
+    INotificacion notificacion = creador.crearNotificacion();
+    String msg = 'Tu cita para el ${cita.fecha.day}/${cita.fecha.month}/${cita.fecha.year} a las ${cita.hora} ha sido agendada con éxito.';
+    
+    // Llamamos a enviar()
+    notificacion.enviar(msg, cita.paciente);
     db.addNotificacion(notificacion);
     
     // Forzamos actualización de estado
@@ -46,13 +48,25 @@ class CitasNotifier extends Notifier<List<Cita>> {
     if (index != -1) {
       db.citas[index] = newCita;
     }
+
+    // Factory Method para notificación
+    CreadorNotificacion creador = CreadorNotifSMS(); // Variamos a SMS para este caso
+    INotificacion notificacion = creador.crearNotificacion();
+    String msg = 'La cita para el ${newCita.fecha.day}/${newCita.fecha.month}/${newCita.fecha.year} a las ${newCita.hora} ha sido actualizada.';
     
-    final notificacion = Notificacion(
-      mensaje: 'El estado de la cita ha cambiado a ${newCita.estadoCita}',
-      canalEnvio: 'email',
-      fechaEnvio: DateTime.now(),
-    );
+    // Llamamos a enviar()
+    notificacion.enviar(msg, newCita.paciente);
     db.addNotificacion(notificacion);
+
+    // Llamar adaptador si la cita es completada
+    if (newCita.estadoCita == 'Completa' && oldCita.estadoCita != 'Completa') {
+      final vacuna = newCita.vacunacion?.vacunaAplicada;
+      if (vacuna != null) {
+        final adaptador = AdaptadorMinsal();
+        final controlador = ControladorVacunacion(adaptador);
+        controlador.registrarDosis(newCita.paciente.rut, vacuna.id);
+      }
+    }
     
     final currentUser = ref.read(authStateProvider);
     if (currentUser?.role == AppRole.especialista) {
