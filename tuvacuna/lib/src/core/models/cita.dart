@@ -6,9 +6,12 @@ import 'campana.dart';
 import 'vacuna.dart';
 import 'estado_cita.dart';
 
+/// Clase Cita: Entidad que representa una cita médica.
+/// PATRÓN DE DISEÑO: State.
 class Cita {
   final DateTime fecha;
   final String hora;
+  /// PATRÓN DE DISEÑO: State. Referencia al estado actual (-estadoActual: Estado)
   EstadoCita estadoActual;
   
   String get estadoCita => estadoActual.nombre;
@@ -17,11 +20,11 @@ class Cita {
   final CentroVacunacion centroVacunacion;
   final Paciente paciente;
   final EspecialistaSalud especialista;
-  
+
   // Puede ser opcional si la cita aún no se ha realizado
   Vacunacion? vacunacion;
   final String? observaciones;
-  final Campana? campana; // Referencia a la campaña a la que pertenece esta cita
+  final Campana? campana;
 
   Cita._internal({
     required this.fecha,
@@ -35,6 +38,8 @@ class Cita {
     this.campana,
   });
 
+  /// Corresponde al mensaje: create(fecha, hora, p) del diagrama de comunicación.
+  /// Crea una nueva instancia de Cita delegando sus parámetros.
   factory Cita({
     required DateTime fecha,
     required String hora,
@@ -68,14 +73,20 @@ class Cita {
     );
   }
 
+  /// PATRÓN DE DISEÑO: State. Corresponde al mensaje: +confirmar()
+  /// Delega la acción de confirmar al estado actual de la cita.
   void confirmar() {
     estadoActual.confirmar(this);
   }
 
+  /// PATRÓN DE DISEÑO: State Corresponde al mensaje: +registrarVacunacion()
+  /// Delega la acción de registro y el cambio de estado de la Cita a su estado actual.
   void registrarVacunacion(Vacunacion v) {
     estadoActual.registrarVacunacion(this, v);
   }
 
+  /// PATRÓN DE DISEÑO: State Corresponde al mensaje: +cancelar()
+  /// Delega la cancelación al estado actual.
   void cancelar() {
     estadoActual.cancelar(this);
   }
@@ -104,10 +115,14 @@ class Cita {
     );
   }
 
+  /// Corresponde al mensaje: getInfoVacuna() del diagrama de comunicación.
+  /// Responsabilidad: Entregar la información de la vacuna contenida en la vacunación aplicada.
   Vacuna? getInfoVacuna() {
     return vacunacion?.vacunaAplicada;
   }
 
+  /// Corresponde al mensaje: getDetalleVacunacion() del diagrama de comunicación.
+  /// Responsabilidad: Obtener la lista de enfermedades desde la vacuna asociada a esta cita.
   List<String> getDetalleVacunacion() {
     final vacuna = getInfoVacuna();
     if (vacuna != null) {

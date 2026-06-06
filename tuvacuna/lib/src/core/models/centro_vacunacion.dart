@@ -4,11 +4,13 @@ import 'paciente.dart';
 import 'especialista_salud.dart';
 import '../data/database_controller.dart';
 
+// Clase CentroVacunacion: Entidad que representa un centro médico.
+// Responsable de gestionar stock y delegar la creación de citas.
 class CentroVacunacion {
   final String id;
   final String nombreCentro;
   final String direccion;
-  final String tipoFinanciamiento; // Ej: 'público' o 'privado'
+  final String tipoFinanciamiento; // Ej: público o privado
   final int capacidadAtencion;
   final String horarioAtencion;
   
@@ -65,6 +67,8 @@ class CentroVacunacion {
     };
   }
 
+  // Actua de creador en el proceso de agendamiento de citas
+  // Corresponde al mensaje: agregarCita(rutPaciente, fecha, hora) del diagrama de comunicación.
   Cita agregarCita(String rutPaciente, String rutEspecialista, DateTime fecha, String hora, DatabaseController db) {
     Paciente p = buscarPaciente(rutPaciente, db);
     EspecialistaSalud especialista = buscarEspecialista(rutEspecialista, db);

@@ -1,6 +1,7 @@
 import '../data/database_controller.dart';
 import 'cita.dart';
 
+/// Clase Paciente: Entidad que representa a una persona del sistema.
 class Paciente {
   final String rut;
   final String nombres;
@@ -42,6 +43,7 @@ class Paciente {
     };
   }
 
+  /// Corresponde al mensaje: getHistorial() del diagrama de comunicación.
   List<Cita> getHistorial(DatabaseController db) {
     return db.getCitas.where((cita) => cita.paciente.rut == rut).toList();
   }

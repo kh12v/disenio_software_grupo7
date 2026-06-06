@@ -1,3 +1,4 @@
+/// Clase Vacuna: Entidad base que almacena los detalles de una vacuna.
 class Vacuna {
   final int id; // Added ID starting from 0 or as provided
   final String nombre; // Agregado para identificar la vacuna (ej. "Covid19")
@@ -25,6 +26,7 @@ class Vacuna {
     };
   }
 
+  /// Corresponde al mensaje: getEnfermedades() del diagrama de comunicación.
   List<String> getEnfermedades() {
     return enfermedades;
   }

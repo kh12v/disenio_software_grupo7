@@ -1,5 +1,8 @@
 import 'paciente.dart';
 
+/// PATRÓN DE DISEÑO: Factory Method
+/// Interfaz INotificacion: Interfaz común para todos los productos de notificación.
+/// Contiene el método enviar(mensaje, p) proveniente del diagrama de clases.
 abstract class INotificacion {
   String get mensaje;
   String get canalEnvio;
@@ -50,10 +53,16 @@ class NotificacionSMS implements INotificacion {
   }
 }
 
+/// PATRÓN DE DISEÑO: Factory Method
+/// CreadorNotificacion: Clase abstracta que declara el Factory Method.
+/// Responsabilidad: Delegar la instanciación de notificaciones a sus subclases concretas.
 abstract class CreadorNotificacion {
+  /// Corresponde al mensaje: crearNotificacion() del patrón Factory Method.
   INotificacion crearNotificacion();
 }
 
+/// PATRÓN DE DISEÑO: Factory Method
+/// CreadorNotifEmail: Creador que instancia productos NotificacionEmail.
 class CreadorNotifEmail extends CreadorNotificacion {
   @override
   INotificacion crearNotificacion() {
@@ -61,6 +70,8 @@ class CreadorNotifEmail extends CreadorNotificacion {
   }
 }
 
+/// PATRÓN DE DISEÑO: Factory Method
+/// CreadorNotifSMS: Creador que instancia productos NotificacionSMS.
 class CreadorNotifSMS extends CreadorNotificacion {
   @override
   INotificacion crearNotificacion() {

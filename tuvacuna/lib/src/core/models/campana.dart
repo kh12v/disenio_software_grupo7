@@ -1,3 +1,4 @@
+// Clase utilizada como modelo de datos para registrar las campañas de vacunación
 class Campana {
   final String nombreCampana;
   final String enfermedadObjetivo;

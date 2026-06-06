@@ -15,6 +15,8 @@ final databaseControllerProvider = Provider<DatabaseController>((ref) {
   throw UnimplementedError('DatabaseController not initialized');
 });
 
+// Clase utilizada para manejar la base de datos simulada.
+// Actuá como interface entre la base de datos y el sistema en general
 class DatabaseController {
   List<Campana> campanas = [];
   List<Paciente> personas = [];

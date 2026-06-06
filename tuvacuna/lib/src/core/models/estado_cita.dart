@@ -1,6 +1,9 @@
 import 'cita.dart';
 import 'vacunacion.dart';
 
+/// PATRÓN DE DISEÑO: State
+/// Interfaz EstadoCita: Interfaz principal del patrón State que define los comportamientos
+/// posibles de una Cita en cualquier estado dado.
 abstract class EstadoCita {
   String get nombre;
   void confirmar(Cita c);
@@ -8,6 +11,8 @@ abstract class EstadoCita {
   void cancelar(Cita c);
 }
 
+/// PATRÓN DE DISEÑO: State
+/// EstadoAgendada: Estado concreto que encapsula el comportamiento cuando la cita está agendada/pendiente.
 class EstadoAgendada implements EstadoCita {
   @override
   String get nombre => 'Pendiente';
@@ -31,6 +36,8 @@ class EstadoAgendada implements EstadoCita {
   }
 }
 
+/// PATRÓN DE DISEÑO: State
+/// EstadoRealizada: Estado concreto que encapsula el comportamiento de una cita cuando ya ha sido completada.
 class EstadoRealizada implements EstadoCita {
   @override
   String get nombre => 'Completa';
@@ -51,6 +58,8 @@ class EstadoRealizada implements EstadoCita {
   }
 }
 
+/// PATRÓN DE DISEÑO: State
+/// EstadoCancelada: Estado concreto que encapsula el comportamiento de una cita que fue cancelada.
 class EstadoCancelada implements EstadoCita {
   @override
   String get nombre => 'Cancelada';
