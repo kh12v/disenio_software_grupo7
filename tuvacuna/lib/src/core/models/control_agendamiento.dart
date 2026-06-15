@@ -1,8 +1,6 @@
 import 'centro_vacunacion.dart';
-import 'vacuna.dart';
 import 'cita.dart';
 import '../data/database_controller.dart';
-import 'cita.dart';
 
 /// Clase ControlAgendamiento: Controlador responsable de la lógica y reglas 
 /// de negocio necesarias para agendar citas.

@@ -7,8 +7,10 @@ abstract class INotificacion {
   String get mensaje;
   String get canalEnvio;
   DateTime get fechaEnvio;
-  
+
   void enviar(String mensaje, Paciente p);
+
+  Map<String, dynamic> toJson();
 }
 
 class NotificacionEmail implements INotificacion {
@@ -16,19 +18,37 @@ class NotificacionEmail implements INotificacion {
   final String _canalEnvio = 'email';
   final DateTime _fechaEnvio = DateTime.now();
 
+  String? _rutPaciente;
+  String? _nombrePaciente;
+
   @override
   String get mensaje => _mensaje;
-  
+
   @override
   String get canalEnvio => _canalEnvio;
-  
+
   @override
   DateTime get fechaEnvio => _fechaEnvio;
 
   @override
   void enviar(String mensaje, Paciente p) {
     _mensaje = mensaje;
-    print("Enviando Email a \${p.nombres} \${p.apellidos}: \$mensaje");
+    _rutPaciente = p.rut;
+    _nombrePaciente = '${p.nombres} ${p.apellidos}';
+
+    print("Enviando Email a ${p.nombres} ${p.apellidos}: $mensaje");
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'tipo': 'email',
+      'mensaje': mensaje,
+      'canal_envio': canalEnvio,
+      'fecha_envio': fechaEnvio.toIso8601String(),
+      if (_rutPaciente != null) 'rut_paciente': _rutPaciente,
+      if (_nombrePaciente != null) 'nombre_paciente': _nombrePaciente,
+    };
   }
 }
 
@@ -37,32 +57,45 @@ class NotificacionSMS implements INotificacion {
   final String _canalEnvio = 'SMS';
   final DateTime _fechaEnvio = DateTime.now();
 
+  String? _rutPaciente;
+  String? _nombrePaciente;
+
   @override
   String get mensaje => _mensaje;
-  
+
   @override
   String get canalEnvio => _canalEnvio;
-  
+
   @override
   DateTime get fechaEnvio => _fechaEnvio;
 
   @override
   void enviar(String mensaje, Paciente p) {
     _mensaje = mensaje;
-    print("Enviando SMS a \${p.nombres} \${p.apellidos}: \$mensaje");
+    _rutPaciente = p.rut;
+    _nombrePaciente = '${p.nombres} ${p.apellidos}';
+
+    print("Enviando SMS a ${p.nombres} ${p.apellidos}: $mensaje");
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'tipo': 'sms',
+      'mensaje': mensaje,
+      'canal_envio': canalEnvio,
+      'fecha_envio': fechaEnvio.toIso8601String(),
+      if (_rutPaciente != null) 'rut_paciente': _rutPaciente,
+      if (_nombrePaciente != null) 'nombre_paciente': _nombrePaciente,
+    };
   }
 }
 
 /// PATRÓN DE DISEÑO: Factory Method
-/// CreadorNotificacion: Clase abstracta que declara el Factory Method.
-/// Responsabilidad: Delegar la instanciación de notificaciones a sus subclases concretas.
 abstract class CreadorNotificacion {
-  /// Corresponde al mensaje: crearNotificacion() del patrón Factory Method.
   INotificacion crearNotificacion();
 }
 
-/// PATRÓN DE DISEÑO: Factory Method
-/// CreadorNotifEmail: Creador que instancia productos NotificacionEmail.
 class CreadorNotifEmail extends CreadorNotificacion {
   @override
   INotificacion crearNotificacion() {
@@ -70,8 +103,6 @@ class CreadorNotifEmail extends CreadorNotificacion {
   }
 }
 
-/// PATRÓN DE DISEÑO: Factory Method
-/// CreadorNotifSMS: Creador que instancia productos NotificacionSMS.
 class CreadorNotifSMS extends CreadorNotificacion {
   @override
   INotificacion crearNotificacion() {

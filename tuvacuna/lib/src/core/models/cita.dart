@@ -141,4 +141,21 @@ class Cita {
       especialista: especialista,
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'fecha': fecha.toIso8601String(),
+      'hora': hora,
+      'estado_cita': estadoCita,
+      'centro_vacunacion_id': centroVacunacion.id,
+      'centro_vacunacion_nombre': centroVacunacion.nombreCentro,
+      'paciente_rut': paciente.rut,
+      'paciente_nombre': '${paciente.nombres} ${paciente.apellidos}',
+      'especialista_rut': especialista.rut,
+      'especialista_nombre': '${especialista.nombres} ${especialista.apellidos}',
+
+      if (observaciones != null) 'observaciones': observaciones,
+      if (campana != null) 'campana_nombre': campana!.nombreCampana,
+      if (vacunacion != null) 'vacunacion': vacunacion!.toJson(),
+    };
+  }
 }

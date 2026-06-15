@@ -76,7 +76,7 @@ class _HistorialView extends ConsumerWidget {
     final controlador = ControladorConsulta();
     List<String> historialEnfermedades = [];
     try {
-      historialEnfermedades = controlador.obtenerHistorialVanucacion(user.rut, db);
+      historialEnfermedades=controlador.obtenerHistorialVacunacion(user.rut, db);
     } catch (e) {
       // Ignore if not found
     }

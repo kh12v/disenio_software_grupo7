@@ -7,11 +7,18 @@ class AuthRepository {
 
   AuthRepository(this.db);
 
-  /// Simulates a network request to a government API for authentication
+  // Normaliza el RUT para comparar sin puntos, guion ni diferencias entre k/K.
+  String _normalizarRut(String rut) {
+    return rut
+        .replaceAll(RegExp(r'[^0-9kK]'), '')
+        .toUpperCase()
+        .trim();
+  }
+
+  /// Simula una petición a una API del gobierno para autenticación.
   Future<AppUser?> login(String rut, String claveUnica) async {
-    // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
-    
+
     if (rut.trim().isEmpty || claveUnica.trim().isEmpty) {
       throw Exception('RUT y Clave Única son requeridos');
     }
@@ -20,28 +27,49 @@ class AuthRepository {
       throw Exception('Clave Única incorrecta (simulada)');
     }
 
-    // Check if user is in "personas"
+    final rutNormalizado = _normalizarRut(rut);
+
     final personas = db.getPersonas;
-    final personaIndex = personas.indexWhere((p) => p.rut == rut);
-    
+
+    final personaIndex = personas.indexWhere(
+      (p) => _normalizarRut(p.rut) == rutNormalizado,
+    );
+
     if (personaIndex == -1) {
       throw Exception('Usuario no encontrado en la base de datos de personas');
     }
 
     final persona = personas[personaIndex];
 
-    // Determine role
-    final isOrganizador = db.getOrganizadores.any((o) => o.rut == rut);
+    final isOrganizador = db.getOrganizadores.any(
+      (o) => _normalizarRut(o.rut) == rutNormalizado,
+    );
+
     if (isOrganizador) {
-      return AppUser(rut: rut, name: '${persona.nombres} ${persona.apellidos}', role: AppRole.organizador);
+      return AppUser(
+        rut: persona.rut,
+        name: '${persona.nombres} ${persona.apellidos}',
+        role: AppRole.organizador,
+      );
     }
 
-    final isEspecialista = db.getEspecialistas.any((e) => e.rut == rut);
+    final isEspecialista = db.getEspecialistas.any(
+      (e) => _normalizarRut(e.rut) == rutNormalizado,
+    );
+
     if (isEspecialista) {
-      return AppUser(rut: rut, name: '${persona.nombres} ${persona.apellidos}', role: AppRole.especialista);
+      return AppUser(
+        rut: persona.rut,
+        name: '${persona.nombres} ${persona.apellidos}',
+        role: AppRole.especialista,
+      );
     }
 
-    return AppUser(rut: rut, name: '${persona.nombres} ${persona.apellidos}', role: AppRole.paciente);
+    return AppUser(
+      rut: persona.rut,
+      name: '${persona.nombres} ${persona.apellidos}',
+      role: AppRole.paciente,
+    );
   }
 
   Future<void> logout() async {
@@ -55,7 +83,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(db);
 });
 
-// A provider to manage the currently logged-in user state
+// Provider para manejar el usuario actualmente logueado
 class AuthNotifier extends Notifier<AppUser?> {
   @override
   AppUser? build() => null;

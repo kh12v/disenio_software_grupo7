@@ -69,10 +69,20 @@ class CitasNotifier extends Notifier<List<Cita>> {
     }
     
     final currentUser = ref.read(authStateProvider);
-    if (currentUser?.role == AppRole.especialista) {
-      state = db.getCitas.where((c) => c.especialista.rut == currentUser!.rut).toList();
+
+    if (currentUser == null) {
+      state = [];
+      return;
+    }
+
+    if (currentUser.role == AppRole.especialista) {
+      state = db.getCitas
+          .where((c) => c.especialista.rut == currentUser.rut)
+          .toList();
     } else {
-      state = db.getCitas.where((c) => c.paciente.rut == currentUser!.rut).toList();
+      state = db.getCitas
+          .where((c) => c.paciente.rut == currentUser.rut)
+          .toList();
     }
   }
 }
