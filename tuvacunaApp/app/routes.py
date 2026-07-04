@@ -11,6 +11,40 @@ import re
 def index():
     return render_template('index.html', title='Inicio')
 
+@app.route('/campaigns')
+def campaigns():
+    campaigns = [
+        {
+            'name': 'Campaña de invierno',
+            'description': 'Vacunación contra influenza para adultos mayores y personas de riesgo.',
+            'start_date': '2026-07-01',
+            'end_date': '2026-07-31',
+            'status': 'Activa',
+            'registered_people_count': 842
+        },
+        {
+            'name': 'Campaña escolar',
+            'description': 'Aplicación de vacunas para estudiantes del sistema escolar municipal.',
+            'start_date': '2026-08-10',
+            'end_date': '2026-08-20',
+            'status': 'Próximamente',
+            'registered_people_count': 324
+        },
+        {
+            'name': 'Campaña comunitaria',
+            'description': 'Atención en centros comunales para la vacunación de la comunidad.',
+            'start_date': '2026-09-01',
+            'end_date': '2026-09-15',
+            'status': 'Programada',
+            'registered_people_count': 118
+        }
+    ]
+    return render_template(
+        'campaigns.html',
+        title='Campañas de vacunación',
+        campaigns=campaigns
+    )
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
