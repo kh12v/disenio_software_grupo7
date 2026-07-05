@@ -186,7 +186,7 @@ def especialista_dashboard():
     especialista = EspecialistaSalud.query.filter_by(rut=current_user.rut).first()
     citas_pendientes = []
     if especialista:
-        citas_pendientes = Cita.query.filter_by(especialista_id=especialista.id, estado_cita='Pendiente').all()
+        citas_pendientes = Cita.query.filter_by(especialista_id=especialista.id, estado_cita='Agendada').all()
         
     return render_template('especialista_dashboard.html', title='Panel de Especialista', citas=citas_pendientes)
 
@@ -200,7 +200,7 @@ def process_cita(cita_id):
     especialista = EspecialistaSalud.query.filter_by(rut=current_user.rut).first()
     
     # Check if the appointment belongs to this specialist and is pending
-    if cita.especialista_id != especialista.id or cita.estado_cita != 'Pendiente':
+    if cita.especialista_id != especialista.id or cita.estado_cita != 'Agendada':
         flash('No tienes permiso para atender esta cita o ya no está pendiente.')
         return redirect(url_for('especialista_dashboard'))
         

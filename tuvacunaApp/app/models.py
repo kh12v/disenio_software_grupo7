@@ -58,8 +58,8 @@ class CentroVacunacion(db.Model):
             return False, "No hay especialistas disponibles en este centro."
             
         nueva_cita = Cita(
-            fecha=datetime.strptime(fecha, '%Y-%m-%d').date(),
-            hora=datetime.strptime(hora, '%H:%M').time(),
+            fecha=fecha,
+            hora=hora,
             estado_cita='Agendada',
             centro_id=self.id,
             paciente_id=paciente.id,
