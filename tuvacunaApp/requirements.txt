@@ -3,3 +3,5 @@ Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 Werkzeug==3.0.1
 pytailwindcss==0.2.0
+resend==2.1.0
+python-dotenv==1.0.1
