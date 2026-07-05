@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-indigo-100">
+        <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center">
+            <h2 class="text-2xl font-bold text-white">Atender Cita de Vacunación</h2>
+            <span class="px-3 py-1 bg-white text-indigo-800 text-sm font-bold rounded-full">
+                {{ cita.fecha.strftime('%d/%m/%Y') }} - {{ cita.hora.strftime('%H:%M') }}
+            </span>
+        </div>
+        
+        <div class="p-8">
+            <div class="mb-8 p-6 bg-indigo-50 rounded-lg border border-indigo-100">
+                <h3 class="text-lg font-bold text-indigo-900 mb-4 border-b border-indigo-200 pb-2">Datos del Paciente</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+                    <div><span class="font-bold text-indigo-700">Nombres:</span> {{ cita.paciente.nombres }} {{ cita.paciente.apellidos }}</div>
+                    <div><span class="font-bold text-indigo-700">RUT:</span> {{ cita.paciente.rut }}</div>
+                    <div><span class="font-bold text-indigo-700">Teléfono:</span> {{ cita.paciente.telefono }}</div>
+                    <div><span class="font-bold text-indigo-700">Correo:</span> {{ cita.paciente.correo }}</div>
+                </div>
+            </div>
+
+            <form method="POST" class="space-y-6">
+                <!-- Action toggle -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+                    <label class="text-base font-bold text-gray-900 mb-4 block">¿Se administró la dosis?</label>
+                    <div class="flex space-x-6">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="action" value="aplicar" id="radio-aplicar" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500" checked>
+                            <span class="ml-3 text-gray-700 font-medium">Sí, registrar vacunación</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="action" value="cancelar" id="radio-cancelar" class="h-5 w-5 text-red-600 focus:ring-red-500">
+                            <span class="ml-3 text-gray-700 font-medium">No, cancelar cita</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Administer details section -->
+                <div id="vacunacion-details" class="space-y-6 transition-all duration-300">
+                    <div>
+                        <label for="vacuna_id" class="block text-sm font-bold text-gray-700">Vacuna Administrada</label>
+                        <select id="vacuna_id" name="vacuna_id" class="mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="" disabled selected>-- Selecciona la vacuna --</option>
+                            {% for v in vacunas %}
+                            <option value="{{ v.id }}">{{ v.enfermedades|join(', ') }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="numero_dosis" class="block text-sm font-bold text-gray-700">Número de Dosis</label>
+                        <input type="number" id="numero_dosis" name="numero_dosis" min="1" value="1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+
+                    <div>
+                        <label for="observaciones" class="block text-sm font-bold text-gray-700">Observaciones o Reacciones (Opcional)</label>
+                        <textarea id="observaciones" name="observaciones" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Añade detalles si el paciente presentó alguna reacción inmediata..."></textarea>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-gray-200 flex justify-between items-center">
+                    <a href="{{ url_for('especialista_dashboard') }}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-bold rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        Volver al Panel
+                    </a>
+                    
+                    <button type="submit" id="btn-submit" class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        Confirmar Vacunación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const radioAplicar = document.getElementById('radio-aplicar');
+        const radioCancelar = document.getElementById('radio-cancelar');
+        const detailsSection = document.getElementById('vacunacion-details');
+        const btnSubmit = document.getElementById('btn-submit');
+        
+        function toggleDetails() {
+            if (radioAplicar.checked) {
+                detailsSection.style.display = 'block';
+                btnSubmit.textContent = 'Confirmar Vacunación';
+                btnSubmit.className = 'inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors';
+                document.getElementById('vacuna_id').required = true;
+                document.getElementById('numero_dosis').required = true;
+            } else {
+                detailsSection.style.display = 'none';
+                btnSubmit.textContent = 'Confirmar Cancelación';
+                btnSubmit.className = 'inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors';
+                document.getElementById('vacuna_id').required = false;
+                document.getElementById('numero_dosis').required = false;
+            }
+        }
+        
+        radioAplicar.addEventListener('change', toggleDetails);
+        radioCancelar.addEventListener('change', toggleDetails);
+        
+        // Initialize state on load
+        toggleDetails();
+    });
+</script>
+{% endblock %}

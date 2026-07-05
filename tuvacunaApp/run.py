@@ -1,5 +1,5 @@
 from app import app, db
-from app.models import Persona, Organizador, EspecialistaSalud, Paciente, Campana, CentroVacunacion
+from app.models import Persona, Organizador, EspecialistaSalud, Paciente, Campana, CentroVacunacion, Vacuna
 
 if __name__ == '__main__':
     with app.app_context():
@@ -19,6 +19,12 @@ if __name__ == '__main__':
             cv1 = CentroVacunacion(nombre_centro='Hospital Central', direccion='Av. Principal 123', tipo_financiamiento='Público', capacidad_atencion=100, horario_atencion='08:00 - 18:00')
             cv2 = CentroVacunacion(nombre_centro='Cesfam Norte', direccion='Calle Norte 456', tipo_financiamiento='Público', capacidad_atencion=50, horario_atencion='09:00 - 17:00')
             db.session.add_all([cv1, cv2])
+            db.session.commit()
+            
+        # Seed default vaccine
+        if not Vacuna.query.first():
+            v1 = Vacuna(enfermedades=["COVID-19", "Influenza"])
+            db.session.add(v1)
             db.session.commit()
             
         # Seed default users

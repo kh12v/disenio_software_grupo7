@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, session
 from app import app, db
-from app.models import Persona, Organizador, EspecialistaSalud, Paciente, Campana, CentroVacunacion, Cita
+from app.models import Persona, Organizador, EspecialistaSalud, Paciente, Campana, CentroVacunacion, Cita, Vacuna, Vacunacion, Notificacion
 from flask_login import current_user, login_user, logout_user, login_required
 from urllib.parse import urlsplit
 import re
@@ -186,7 +186,78 @@ def patient_dashboard():
 def especialista_dashboard():
     if session.get('role') != 'especialista':
         return redirect(url_for('index'))
-    return render_template('especialista_dashboard.html', title='Panel de Especialista')
+        
+    especialista = EspecialistaSalud.query.filter_by(rut=current_user.rut).first()
+    citas_pendientes = []
+    if especialista:
+        citas_pendientes = Cita.query.filter_by(especialista_id=especialista.id, estado_cita='Pendiente').all()
+        
+    return render_template('especialista_dashboard.html', title='Panel de Especialista', citas=citas_pendientes)
+
+@app.route('/process_cita/<int:cita_id>', methods=['GET', 'POST'])
+@login_required
+def process_cita(cita_id):
+    if session.get('role') != 'especialista':
+        return redirect(url_for('index'))
+        
+    cita = Cita.query.get_or_404(cita_id)
+    especialista = EspecialistaSalud.query.filter_by(rut=current_user.rut).first()
+    
+    # Check if the appointment belongs to this specialist and is pending
+    if cita.especialista_id != especialista.id or cita.estado_cita != 'Pendiente':
+        flash('No tienes permiso para atender esta cita o ya no está pendiente.')
+        return redirect(url_for('especialista_dashboard'))
+        
+    vacunas = Vacuna.query.all()
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'cancelar':
+            cita.estado_cita = 'Cancelada'
+            notificacion = Notificacion(
+                mensaje=f"La cita para el {cita.fecha.strftime('%d/%m/%Y')} a las {cita.hora.strftime('%H:%M')} ha sido cancelada.",
+                canal_envio="Sistema",
+                fecha_envio=datetime.now()
+            )
+            db.session.add(notificacion)
+            db.session.commit()
+            flash('La cita ha sido marcada como Cancelada.')
+            
+        elif action == 'aplicar':
+            vacuna_id = request.form.get('vacuna_id')
+            numero_dosis = request.form.get('numero_dosis')
+            observaciones = request.form.get('observaciones')
+            
+            if not vacuna_id or not numero_dosis:
+                flash('Debes seleccionar la vacuna y el número de dosis.')
+                return redirect(url_for('process_cita', cita_id=cita.id))
+                
+            nueva_vacunacion = Vacunacion(
+                fecha_aplicacion=datetime.now().date(),
+                numero_dosis=int(numero_dosis),
+                observaciones_reacciones=observaciones,
+                vacuna_id=vacuna_id,
+                especialista_id=especialista.id
+            )
+            db.session.add(nueva_vacunacion)
+            db.session.flush() # To get the id for the cita
+            
+            cita.vacunacion_id = nueva_vacunacion.id
+            cita.estado_cita = 'Completa'
+            
+            notificacion = Notificacion(
+                mensaje=f"Se ha completado exitosamente tu vacunación (Dosis {numero_dosis}) el {cita.fecha.strftime('%d/%m/%Y')}.",
+                canal_envio="Sistema",
+                fecha_envio=datetime.now()
+            )
+            db.session.add(notificacion)
+            db.session.commit()
+            flash('¡La vacunación ha sido registrada exitosamente!')
+            
+        return redirect(url_for('especialista_dashboard'))
+        
+    return render_template('process_cita.html', title='Atender Cita', cita=cita, vacunas=vacunas)
 
 @app.route('/organizador_dashboard')
 @login_required
