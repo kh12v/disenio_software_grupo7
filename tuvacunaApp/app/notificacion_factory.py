@@ -4,14 +4,14 @@ from app import db
 from app.models import Notificacion, Paciente
 
 class INotificacion(ABC):
+    # Interfaz común para todas las notificaciones creadas por el Factory.
     @abstractmethod
     def enviar(self, mensaje: str, p: Paciente):
-        """
-        Envía la notificación al paciente y la guarda en la base de datos.
-        """
+        # Envía la notificación al paciente y la guarda en la base de datos.
         pass
 
 class NotificacionEmail(INotificacion):
+    # Implementación concreta para notificaciones por correo electrónico.
     def enviar(self, mensaje: str, p: Paciente):
         from app.email_service import EmailService
         
@@ -37,6 +37,7 @@ class NotificacionEmail(INotificacion):
         db.session.add(notificacion)
 
 class NotificacionSMS(INotificacion):
+    # Implementación concreta para notificaciones por SMS.
     def enviar(self, mensaje: str, p: Paciente):
         # Simulación del envío de SMS
         print(f"[API SMS SIMULADA] Enviando SMS al teléfono {p.telefono}: {mensaje}")
@@ -50,17 +51,17 @@ class NotificacionSMS(INotificacion):
         db.session.add(notificacion)
 
 class CreadorNotificacion(ABC):
+    # Clase abstracta que declara el Factory Method que retorna un objeto INotificacion.
     @abstractmethod
     def crearNotificacion(self) -> INotificacion:
-        """
-        Factory method que debe ser implementado por las subclases
-        """
         pass
 
 class CreadorNotifEmail(CreadorNotificacion):
+    # Sobrescribe el Factory Method para retornar una instancia de NotificacionEmail.
     def crearNotificacion(self) -> INotificacion:
         return NotificacionEmail()
 
 class CreadorNotifSMS(CreadorNotificacion):
+    # Sobrescribe el Factory Method para retornar una instancia de NotificacionSMS.
     def crearNotificacion(self) -> INotificacion:
         return NotificacionSMS()

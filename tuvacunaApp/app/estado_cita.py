@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 
 class EstadoCita(ABC):
+    # Define la interfaz común que deben implementar todos los estados 
+    # específicos por los que transiciona una Cita.
     @abstractmethod
     def confirmar(self, c):
         pass
@@ -14,8 +16,10 @@ class EstadoCita(ABC):
         pass
 
 class EstadoAgendada(EstadoCita):
+    # PATRÓN APLICADO: State (Estado Concreto)
+    # Estado inicial de una cita una vez creada. Permite ser realizada o cancelada.
     def confirmar(self, c):
-        # Already scheduled, no operation needed for now
+        # No acción requerida
         pass
         
     def registrarVacunacion(self, c, v):
@@ -27,6 +31,8 @@ class EstadoAgendada(EstadoCita):
         c.estado_cita = "Cancelada"
 
 class EstadoRealizada(EstadoCita):
+    # Estado final de la cita cuando la vacuna fue suministrada.
+    # Impide transiciones de estado posteriores.
     def confirmar(self, c):
         raise ValueError("La cita ya fue realizada")
         
@@ -37,6 +43,8 @@ class EstadoRealizada(EstadoCita):
         raise ValueError("No se puede cancelar una cita que ya fue realizada")
 
 class EstadoCancelada(EstadoCita):
+    # Estado final de la cita si no se lleva a cabo.
+    # Impide volver a confirmar o vacunar en esta cita.
     def confirmar(self, c):
         raise ValueError("No se puede confirmar una cita cancelada")
         

@@ -1,21 +1,24 @@
 from app.models import CentroVacunacion
 
 class ControlAgendamiento:
+    # Clase responsable de gestionar la creación de nuevas citas médicas.
+    # Actúa como controlador en el diagrama de comunicación para agendar citas.
     @staticmethod
     def agendarCita(rutPaciente, idCentro, fecha, hora):
-        """
-        Maneja la creación de nuevas citas coordinando con el CentroVacunacion.
-        Sigue el diagrama de comunicaciones especificado.
-        """
+        # Coordina la creación de una nueva cita buscando el Centro de Vacunación
+        # y delegandole la responsabilidad de crear la cita.
         centro = CentroVacunacion.query.get(idCentro)
         if centro:
-            # Llama al método agregarCita del Centro de Vacunación
             return centro.agregarCita(rutPaciente, idCentro, fecha, hora)
         return False, "Centro de vacunación no encontrado."
 
 class ControladorConsulta:
+    # Clase responsable de gestionar las consultas relacionadas con el paciente,
+    # específicamente para obtener su historial de vacunación.
     @staticmethod
     def obtenerHistorialVacunacion(rutPaciente):
+        # Retorna una lista de strings con las enfermedades de las que el paciente 
+        # ya ha sido vacunado.
         from app.models import Paciente
         paciente = Paciente.query.filter_by(rut=rutPaciente).first()
         if not paciente:
@@ -31,8 +34,11 @@ class ControladorConsulta:
         return enfermedades_inmunizadas
 
 class ControladorVacunacion:
+    # Clase responsable de registrar el evento de vacunación y comunicarlo
+    # al Ministerio de Salud (Minsal).
     @staticmethod
     def registrarDosis(rut: str, idVacuna: int):
+        # Utiliza AdaptadorMinsal para reportar al paciente.
         from app.minsal_adapter import AdaptadorMinsal
         adaptador = AdaptadorMinsal()
         adaptador.reportarPaciente(rut, idVacuna)
