@@ -90,6 +90,9 @@ class EspecialistaSalud(db.Model):
     nombres = db.Column(db.String(100))
     apellidos = db.Column(db.String(100))
     especialidad = db.Column(db.String(100))
+    centro_id = db.Column(db.Integer, db.ForeignKey('centro_vacunacion.id'))
+    
+    centro = db.relationship('CentroVacunacion', backref=db.backref('especialistas', lazy=True))
 
 class Vacunacion(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -1,50 +1,107 @@
 from flask import render_template, redirect, url_for, flash, request, session
 from app import app, db
-from app.models import Persona, Organizador, EspecialistaSalud, Paciente
+from app.models import Persona, Organizador, EspecialistaSalud, Paciente, Campana, CentroVacunacion, Cita
 from flask_login import current_user, login_user, logout_user, login_required
 from urllib.parse import urlsplit
 import re
+from datetime import datetime
 
 @app.route('/')
 @app.route('/index')
-@login_required
 def index():
-    return render_template('index.html', title='Inicio')
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+        
+    role = session.get('role')
+    if role == 'organizador':
+        return redirect(url_for('organizador_dashboard'))
+    elif role == 'especialista':
+        return redirect(url_for('especialista_dashboard'))
+    else:
+        return redirect(url_for('patient_dashboard'))
 
 @app.route('/campaigns')
 def campaigns():
-    campaigns = [
-        {
-            'name': 'Campaña de invierno',
-            'description': 'Vacunación contra influenza para adultos mayores y personas de riesgo.',
-            'start_date': '2026-07-01',
-            'end_date': '2026-07-31',
-            'status': 'Activa',
-            'registered_people_count': 842
-        },
-        {
-            'name': 'Campaña escolar',
-            'description': 'Aplicación de vacunas para estudiantes del sistema escolar municipal.',
-            'start_date': '2026-08-10',
-            'end_date': '2026-08-20',
-            'status': 'Próximamente',
-            'registered_people_count': 324
-        },
-        {
-            'name': 'Campaña comunitaria',
-            'description': 'Atención en centros comunales para la vacunación de la comunidad.',
-            'start_date': '2026-09-01',
-            'end_date': '2026-09-15',
-            'status': 'Programada',
-            'registered_people_count': 118
-        }
-    ]
+    campaigns_data = Campana.query.all()
+    # Format dates as strings for the template
+    formatted_campaigns = []
+    for c in campaigns_data:
+        formatted_campaigns.append({
+            'name': c.nombre_campana,
+            'description': f'Enfermedad objetivo: {c.enfermedad_objetivo}. Población: {c.poblacion_objetivo}',
+            'start_date': c.fecha_inicio.strftime('%Y-%m-%d'),
+            'end_date': c.fecha_fin.strftime('%Y-%m-%d'),
+            'status': 'Activa' if c.fecha_inicio <= datetime.now().date() <= c.fecha_fin else 'Programada' if c.fecha_inicio > datetime.now().date() else 'Finalizada',
+            'registered_people_count': 0 # Mock count for now
+        })
     return render_template(
         'campaigns.html',
         title='Campañas de vacunación',
-        campaigns=campaigns
+        campaigns=formatted_campaigns
     )
 
+@app.route('/request_appointment', methods=['GET', 'POST'])
+@login_required
+def request_appointment():
+    if session.get('role') != 'patient':
+        flash('Debes ingresar como paciente para solicitar una cita.')
+        return redirect(url_for('index'))
+        
+    campanas = Campana.query.all()
+    centros = CentroVacunacion.query.all()
+    
+    # Simulated dates/times as requested
+    horarios_simulados = [
+        {'fecha': '2026-07-02', 'hora': '16:00'},
+        {'fecha': '2026-07-03', 'hora': '10:00'},
+        {'fecha': '2026-07-04', 'hora': '14:30'}
+    ]
+    
+    # Get booked appointments to pass to frontend
+    citas_agendadas = Cita.query.all()
+    citas_ocupadas_por_centro = {}
+    for c in citas_agendadas:
+        centro_id_str = str(c.centro_id)
+        if centro_id_str not in citas_ocupadas_por_centro:
+            citas_ocupadas_por_centro[centro_id_str] = []
+        citas_ocupadas_por_centro[centro_id_str].append(f"{c.fecha.strftime('%Y-%m-%d')} {c.hora.strftime('%H:%M')}")
+    
+    if request.method == 'POST':
+        centro_id = request.form.get('centro_id')
+        horario_seleccionado = request.form.get('horario')
+        
+        if not centro_id or not horario_seleccionado:
+            flash('Por favor completa todos los campos.')
+            return redirect(url_for('request_appointment'))
+            
+        fecha_str, hora_str = horario_seleccionado.split(' ')
+        fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+        hora_obj = datetime.strptime(hora_str, '%H:%M').time()
+        
+        # Check if already booked
+        cita_existente = Cita.query.filter_by(centro_id=centro_id, fecha=fecha_obj, hora=hora_obj).first()
+        if cita_existente:
+            flash('Lo sentimos, este horario ya está reservado para el centro seleccionado.')
+            return redirect(url_for('request_appointment'))
+        
+        paciente = Paciente.query.filter_by(rut=current_user.rut).first()
+        especialista = EspecialistaSalud.query.filter_by(centro_id=centro_id).first()
+        
+        nueva_cita = Cita(
+            fecha=fecha_obj,
+            hora=hora_obj,
+            estado_cita='Pendiente',
+            centro_id=centro_id,
+            paciente_id=paciente.id,
+            especialista_id=especialista.id if especialista else None
+        )
+        db.session.add(nueva_cita)
+        db.session.commit()
+        
+        flash('¡Cita solicitada exitosamente!')
+        return redirect(url_for('patient_dashboard'))
+        
+    return render_template('request_appointment.html', title='Solicitar Cita', campanas=campanas, centros=centros, horarios=horarios_simulados, citas_ocupadas_por_centro=citas_ocupadas_por_centro)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -117,7 +174,12 @@ def choose_role():
 @app.route('/patient_dashboard')
 @login_required
 def patient_dashboard():
-    return render_template('patient_dashboard.html', title='Panel de Paciente')
+    paciente = Paciente.query.filter_by(rut=current_user.rut).first()
+    citas = []
+    if paciente:
+        citas = Cita.query.filter_by(paciente_id=paciente.id).all()
+        
+    return render_template('patient_dashboard.html', title='Panel de Paciente', citas=citas)
 
 @app.route('/especialista_dashboard')
 @login_required
