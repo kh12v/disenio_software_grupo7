@@ -40,9 +40,44 @@ class CentroVacunacion(db.Model):
     capacidad_atencion = db.Column(db.Integer)
     horario_atencion = db.Column(db.String(100))
 
+    def buscarPaciente(self, rutPaciente):
+        from app.models import Paciente
+        return Paciente.query.filter_by(rut=rutPaciente).first()
+        
+    def create(self, fecha, hora, p):
+        from app.models import Cita, EspecialistaSalud
+        from app import db
+        
+        # Validación: revisar si ya existe una cita en esa fecha y hora
+        cita_existente = Cita.query.filter_by(centro_id=self.id, fecha=fecha, hora=hora).first()
+        if cita_existente:
+            return False, 'Lo sentimos, este horario ya está reservado para el centro seleccionado.'
+            
+        especialista = EspecialistaSalud.query.filter_by(centro_id=self.id).first()
+        
+        nueva_cita = Cita(
+            fecha=fecha,
+            hora=hora,
+            estado_cita='Pendiente',
+            centro_id=self.id,
+            paciente_id=p.id,
+            especialista_id=especialista.id if especialista else None
+        )
+        db.session.add(nueva_cita)
+        db.session.commit()
+        return True, '¡Cita solicitada exitosamente!'
+        
+    def agregarCita(self, rutPaciente, idCentro, fecha, hora):
+        p = self.buscarPaciente(rutPaciente)
+        if not p:
+            return False, 'Paciente no encontrado.'
+        return self.create(fecha, hora, p)
 class Vacuna(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     enfermedades = db.Column(db.JSON)
+
+    def getEnfermedades(self):
+        return self.enfermedades if self.enfermedades else []
 
 class InventarioVacuna(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -68,6 +103,10 @@ class Paciente(db.Model):
     telefono = db.Column(db.String(20))
     correo = db.Column(db.String(120))
 
+    def getHistorial(self):
+        # Devuelve las citas en las que el paciente ya fue vacunado
+        return [c for c in self.citas if c.estado_cita == 'Completa']
+
 class Cita(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fecha = db.Column(db.Date)
@@ -82,6 +121,14 @@ class Cita(db.Model):
     paciente = db.relationship('Paciente', backref=db.backref('citas', lazy=True))
     especialista = db.relationship('EspecialistaSalud', foreign_keys=[especialista_id], backref=db.backref('citas_atendidas', lazy=True))
     vacunacion = db.relationship('Vacunacion', backref=db.backref('cita_asociada', uselist=False, lazy=True))
+
+    def getDetalleVacunacion(self):
+        return self.getInfoVacuna()
+
+    def getInfoVacuna(self):
+        if self.vacunacion and self.vacunacion.vacuna:
+            return self.vacunacion.vacuna.getEnfermedades()
+        return []
 
 class EspecialistaSalud(db.Model):
     id = db.Column(db.Integer, primary_key=True)

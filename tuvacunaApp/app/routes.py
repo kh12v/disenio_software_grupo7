@@ -78,28 +78,21 @@ def request_appointment():
         fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d').date()
         hora_obj = datetime.strptime(hora_str, '%H:%M').time()
         
-        # Check if already booked
-        cita_existente = Cita.query.filter_by(centro_id=centro_id, fecha=fecha_obj, hora=hora_obj).first()
-        if cita_existente:
-            flash('Lo sentimos, este horario ya está reservado para el centro seleccionado.')
-            return redirect(url_for('request_appointment'))
+        from app.controllers import ControlAgendamiento
         
-        paciente = Paciente.query.filter_by(rut=current_user.rut).first()
-        especialista = EspecialistaSalud.query.filter_by(centro_id=centro_id).first()
-        
-        nueva_cita = Cita(
+        success, message = ControlAgendamiento.agendarCita(
+            rutPaciente=current_user.rut,
+            idCentro=centro_id,
             fecha=fecha_obj,
-            hora=hora_obj,
-            estado_cita='Pendiente',
-            centro_id=centro_id,
-            paciente_id=paciente.id,
-            especialista_id=especialista.id if especialista else None
+            hora=hora_obj
         )
-        db.session.add(nueva_cita)
-        db.session.commit()
         
-        flash('¡Cita solicitada exitosamente!')
-        return redirect(url_for('patient_dashboard'))
+        if success:
+            flash(message)
+            return redirect(url_for('patient_dashboard'))
+        else:
+            flash(message)
+            return redirect(url_for('request_appointment'))
         
     return render_template('request_appointment.html', title='Solicitar Cita', campanas=campanas, centros=centros, horarios=horarios_simulados, citas_ocupadas_por_centro=citas_ocupadas_por_centro)
 @app.route('/login', methods=['GET', 'POST'])
@@ -176,10 +169,13 @@ def choose_role():
 def patient_dashboard():
     paciente = Paciente.query.filter_by(rut=current_user.rut).first()
     citas = []
+    historial = []
     if paciente:
         citas = Cita.query.filter_by(paciente_id=paciente.id).all()
+        from app.controllers import ControladorConsulta
+        historial = ControladorConsulta.obtenerHistorialVacunacion(current_user.rut)
         
-    return render_template('patient_dashboard.html', title='Panel de Paciente', citas=citas)
+    return render_template('patient_dashboard.html', title='Panel de Paciente', citas=citas, historial=historial)
 
 @app.route('/especialista_dashboard')
 @login_required
