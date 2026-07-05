@@ -210,13 +210,16 @@ def process_cita(cita_id):
         action = request.form.get('action')
         
         if action == 'cancelar':
-            cita.estado_cita = 'Cancelada'
-            notificacion = Notificacion(
-                mensaje=f"La cita para el {cita.fecha.strftime('%d/%m/%Y')} a las {cita.hora.strftime('%H:%M')} ha sido cancelada.",
-                canal_envio="Sistema",
-                fecha_envio=datetime.now()
-            )
-            db.session.add(notificacion)
+            # Delegar al patrón State
+            cita.cancelar()
+            
+            # Patrón Factory Method: Crear y enviar notificación
+            from app.notificacion_factory import CreadorNotifEmail
+            creador = CreadorNotifEmail()
+            notificador = creador.crearNotificacion()
+            mensaje = f"La cita para el {cita.fecha.strftime('%d/%m/%Y')} a las {cita.hora.strftime('%H:%M')} ha sido cancelada."
+            notificador.enviar(mensaje, cita.paciente)
+            
             db.session.commit()
             flash('La cita ha sido marcada como Cancelada.')
             
@@ -239,15 +242,22 @@ def process_cita(cita_id):
             db.session.add(nueva_vacunacion)
             db.session.flush() # To get the id for the cita
             
-            cita.vacunacion_id = nueva_vacunacion.id
-            cita.estado_cita = 'Completa'
+            # Delegar al patrón State
+            cita.registrarVacunacion(nueva_vacunacion)
             
-            notificacion = Notificacion(
-                mensaje=f"Se ha completado exitosamente tu vacunación (Dosis {numero_dosis}) el {cita.fecha.strftime('%d/%m/%Y')}.",
-                canal_envio="Sistema",
-                fecha_envio=datetime.now()
-            )
-            db.session.add(notificacion)
+            # Reportar al Minsal usando el Controlador
+            from app.controllers import ControladorVacunacion
+            vacuna_obj = Vacuna.query.get(vacuna_id)
+            if vacuna_obj:
+                ControladorVacunacion.registrarDosis(cita.paciente.rut, vacuna_obj.id_minsal)
+            
+            # Patrón Factory Method: Crear y enviar notificación
+            from app.notificacion_factory import CreadorNotifEmail
+            creador = CreadorNotifEmail()
+            notificador = creador.crearNotificacion()
+            mensaje = f"Se ha completado exitosamente tu vacunación (Dosis {numero_dosis}) el {cita.fecha.strftime('%d/%m/%Y')}."
+            notificador.enviar(mensaje, cita.paciente)
+            
             db.session.commit()
             flash('¡La vacunación ha sido registrada exitosamente!')
             

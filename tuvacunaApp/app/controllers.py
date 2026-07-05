@@ -29,3 +29,10 @@ class ControladorConsulta:
             enfermedades_inmunizadas.extend(enfermedades)
             
         return enfermedades_inmunizadas
+
+class ControladorVacunacion:
+    @staticmethod
+    def registrarDosis(rut: str, idVacuna: int):
+        from app.minsal_adapter import AdaptadorMinsal
+        adaptador = AdaptadorMinsal()
+        adaptador.reportarPaciente(rut, idVacuna)

@@ -74,6 +74,7 @@ class CentroVacunacion(db.Model):
         return self.create(fecha, hora, p)
 class Vacuna(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    id_minsal = db.Column(db.Integer, default=0)
     enfermedades = db.Column(db.JSON)
 
     def getEnfermedades(self):
@@ -105,7 +106,7 @@ class Paciente(db.Model):
 
     def getHistorial(self):
         # Devuelve las citas en las que el paciente ya fue vacunado
-        return [c for c in self.citas if c.estado_cita == 'Completa']
+        return [c for c in self.citas if c.estado_cita in ['Completa', 'Realizada']]
 
 class Cita(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -129,6 +130,26 @@ class Cita(db.Model):
         if self.vacunacion and self.vacunacion.vacuna:
             return self.vacunacion.vacuna.getEnfermedades()
         return []
+
+    @property
+    def estadoActual(self):
+        from app.estado_cita import EstadoAgendada, EstadoRealizada, EstadoCancelada
+        if self.estado_cita == "Agendada":
+            return EstadoAgendada()
+        elif self.estado_cita in ["Realizada", "Completa"]:
+            return EstadoRealizada()
+        elif self.estado_cita == "Cancelada":
+            return EstadoCancelada()
+        return EstadoAgendada() # default
+
+    def confirmar(self):
+        self.estadoActual.confirmar(self)
+
+    def registrarVacunacion(self, v):
+        self.estadoActual.registrarVacunacion(self, v)
+
+    def cancelar(self):
+        self.estadoActual.cancelar(self)
 
 class EspecialistaSalud(db.Model):
     id = db.Column(db.Integer, primary_key=True)
