@@ -264,7 +264,81 @@ def process_cita(cita_id):
 def organizador_dashboard():
     if session.get('role') != 'organizador':
         return redirect(url_for('index'))
-    return render_template('organizador_dashboard.html', title='Panel de Organizador')
+    campanas = Campana.query.all()
+    return render_template('organizador_dashboard.html', title='Panel de Organizador', campanas=campanas)
+
+@app.route('/create_campana', methods=['GET', 'POST'])
+@login_required
+def create_campana():
+    if session.get('role') != 'organizador':
+        return redirect(url_for('index'))
+        
+    if request.method == 'POST':
+        nombre = request.form.get('nombre_campana')
+        enfermedad = request.form.get('enfermedad_objetivo')
+        poblacion = request.form.get('poblacion_objetivo')
+        fecha_inicio_str = request.form.get('fecha_inicio')
+        fecha_fin_str = request.form.get('fecha_fin')
+        
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
+            fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
+            
+            nueva_campana = Campana(
+                nombre_campana=nombre,
+                enfermedad_objetivo=enfermedad,
+                poblacion_objetivo=poblacion,
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin
+            )
+            db.session.add(nueva_campana)
+            db.session.commit()
+            flash('Campaña creada exitosamente.')
+            return redirect(url_for('organizador_dashboard'))
+        except Exception as e:
+            flash(f'Error al crear campaña: {str(e)}')
+            
+    return render_template('campana_form.html', title='Crear Campaña', campana=None)
+
+@app.route('/edit_campana/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_campana(id):
+    if session.get('role') != 'organizador':
+        return redirect(url_for('index'))
+        
+    campana = Campana.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        campana.nombre_campana = request.form.get('nombre_campana')
+        campana.enfermedad_objetivo = request.form.get('enfermedad_objetivo')
+        campana.poblacion_objetivo = request.form.get('poblacion_objetivo')
+        
+        try:
+            campana.fecha_inicio = datetime.strptime(request.form.get('fecha_inicio'), '%Y-%m-%d').date()
+            campana.fecha_fin = datetime.strptime(request.form.get('fecha_fin'), '%Y-%m-%d').date()
+            db.session.commit()
+            flash('Campaña actualizada exitosamente.')
+            return redirect(url_for('organizador_dashboard'))
+        except Exception as e:
+            flash(f'Error al actualizar campaña: {str(e)}')
+            
+    return render_template('campana_form.html', title='Editar Campaña', campana=campana)
+
+@app.route('/delete_campana/<int:id>', methods=['POST'])
+@login_required
+def delete_campana(id):
+    if session.get('role') != 'organizador':
+        return redirect(url_for('index'))
+        
+    campana = Campana.query.get_or_404(id)
+    try:
+        db.session.delete(campana)
+        db.session.commit()
+        flash('Campaña eliminada exitosamente.')
+    except Exception as e:
+        flash(f'Error al eliminar campaña: {str(e)}')
+        
+    return redirect(url_for('organizador_dashboard'))
 
 @app.route('/logout')
 def logout():
