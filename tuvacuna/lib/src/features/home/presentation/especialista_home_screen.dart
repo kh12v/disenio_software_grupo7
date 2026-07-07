@@ -172,7 +172,10 @@ class EspecialistaHomeScreen extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Canal: email', style: TextStyle(color: Colors.grey)),
+                           Text(
+                            'Canal: ${notificacion.canalEnvio}',
+                            style: const TextStyle(color: Colors.grey),
+                            ),
                             const SizedBox(height: 8),
                             Text(notificacion.mensaje, style: const TextStyle(fontWeight: FontWeight.bold)),
                           ],

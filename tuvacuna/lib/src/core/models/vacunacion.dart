@@ -29,4 +29,7 @@ class Vacunacion {
           '${especialistaAdministrador.nombres} ${especialistaAdministrador.apellidos}',
     };
   }
+  Vacuna getInfoVacuna() {
+  return vacunaAplicada;
+}
 }
