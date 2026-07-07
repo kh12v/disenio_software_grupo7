@@ -128,6 +128,7 @@ class Cita(db.Model):
     fecha = db.Column(db.Date)
     hora = db.Column(db.Time)
     estado_cita = db.Column(db.String(50))
+    cancelacion_motivo = db.Column(db.Text)
     centro_id = db.Column(db.Integer, db.ForeignKey('centro_vacunacion.id'))
     paciente_id = db.Column(db.Integer, db.ForeignKey('paciente.id'))
     especialista_id = db.Column(db.Integer, db.ForeignKey('especialista_salud.id'))

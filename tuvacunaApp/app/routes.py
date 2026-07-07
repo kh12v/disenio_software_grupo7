@@ -210,6 +210,9 @@ def process_cita(cita_id):
         action = request.form.get('action')
         
         if action == 'cancelar':
+            cancelacion_motivo = request.form.get('cancelacion_motivo')
+            cita.cancelacion_motivo = cancelacion_motivo
+            
             # Delegar al patrón State
             cita.cancelar()
             
