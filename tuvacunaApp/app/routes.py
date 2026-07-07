@@ -78,28 +78,21 @@ def request_appointment():
         fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d').date()
         hora_obj = datetime.strptime(hora_str, '%H:%M').time()
         
-        # Check if already booked
-        cita_existente = Cita.query.filter_by(centro_id=centro_id, fecha=fecha_obj, hora=hora_obj).first()
-        if cita_existente:
-            flash('Lo sentimos, este horario ya está reservado para el centro seleccionado.')
-            return redirect(url_for('request_appointment'))
+        from app.controllers import ControlAgendamiento
         
-        paciente = Paciente.query.filter_by(rut=current_user.rut).first()
-        especialista = EspecialistaSalud.query.filter_by(centro_id=centro_id).first()
-        
-        nueva_cita = Cita(
+        success, message = ControlAgendamiento.agendarCita(
+            rutPaciente=current_user.rut,
+            idCentro=centro_id,
             fecha=fecha_obj,
-            hora=hora_obj,
-            estado_cita='Pendiente',
-            centro_id=centro_id,
-            paciente_id=paciente.id,
-            especialista_id=especialista.id if especialista else None
+            hora=hora_obj
         )
-        db.session.add(nueva_cita)
-        db.session.commit()
         
-        flash('¡Cita solicitada exitosamente!')
-        return redirect(url_for('patient_dashboard'))
+        if success:
+            flash(message)
+            return redirect(url_for('patient_dashboard'))
+        else:
+            flash(message)
+            return redirect(url_for('request_appointment'))
         
     return render_template('request_appointment.html', title='Solicitar Cita', campanas=campanas, centros=centros, horarios=horarios_simulados, citas_ocupadas_por_centro=citas_ocupadas_por_centro)
 @app.route('/login', methods=['GET', 'POST'])
@@ -176,10 +169,13 @@ def choose_role():
 def patient_dashboard():
     paciente = Paciente.query.filter_by(rut=current_user.rut).first()
     citas = []
+    historial = []
     if paciente:
         citas = Cita.query.filter_by(paciente_id=paciente.id).all()
+        from app.controllers import ControladorConsulta
+        historial = ControladorConsulta.obtenerHistorialVacunacion(current_user.rut)
         
-    return render_template('patient_dashboard.html', title='Panel de Paciente', citas=citas)
+    return render_template('patient_dashboard.html', title='Panel de Paciente', citas=citas, historial=historial)
 
 @app.route('/especialista_dashboard')
 @login_required
@@ -190,7 +186,7 @@ def especialista_dashboard():
     especialista = EspecialistaSalud.query.filter_by(rut=current_user.rut).first()
     citas_pendientes = []
     if especialista:
-        citas_pendientes = Cita.query.filter_by(especialista_id=especialista.id, estado_cita='Pendiente').all()
+        citas_pendientes = Cita.query.filter_by(especialista_id=especialista.id, estado_cita='Agendada').all()
         
     return render_template('especialista_dashboard.html', title='Panel de Especialista', citas=citas_pendientes)
 
@@ -204,7 +200,7 @@ def process_cita(cita_id):
     especialista = EspecialistaSalud.query.filter_by(rut=current_user.rut).first()
     
     # Check if the appointment belongs to this specialist and is pending
-    if cita.especialista_id != especialista.id or cita.estado_cita != 'Pendiente':
+    if cita.especialista_id != especialista.id or cita.estado_cita != 'Agendada':
         flash('No tienes permiso para atender esta cita o ya no está pendiente.')
         return redirect(url_for('especialista_dashboard'))
         
@@ -214,13 +210,19 @@ def process_cita(cita_id):
         action = request.form.get('action')
         
         if action == 'cancelar':
-            cita.estado_cita = 'Cancelada'
-            notificacion = Notificacion(
-                mensaje=f"La cita para el {cita.fecha.strftime('%d/%m/%Y')} a las {cita.hora.strftime('%H:%M')} ha sido cancelada.",
-                canal_envio="Sistema",
-                fecha_envio=datetime.now()
-            )
-            db.session.add(notificacion)
+            cancelacion_motivo = request.form.get('cancelacion_motivo')
+            cita.cancelacion_motivo = cancelacion_motivo
+            
+            # Delegar al patrón State
+            cita.cancelar()
+            
+            # Patrón Factory Method: Crear y enviar notificación
+            from app.notificacion_factory import CreadorNotifEmail
+            creador = CreadorNotifEmail()
+            notificador = creador.crearNotificacion()
+            mensaje = f"La cita para el {cita.fecha.strftime('%d/%m/%Y')} a las {cita.hora.strftime('%H:%M')} ha sido cancelada."
+            notificador.enviar(mensaje, cita.paciente)
+            
             db.session.commit()
             flash('La cita ha sido marcada como Cancelada.')
             
@@ -243,15 +245,22 @@ def process_cita(cita_id):
             db.session.add(nueva_vacunacion)
             db.session.flush() # To get the id for the cita
             
-            cita.vacunacion_id = nueva_vacunacion.id
-            cita.estado_cita = 'Completa'
+            # Delegar al patrón State
+            cita.registrarVacunacion(nueva_vacunacion)
             
-            notificacion = Notificacion(
-                mensaje=f"Se ha completado exitosamente tu vacunación (Dosis {numero_dosis}) el {cita.fecha.strftime('%d/%m/%Y')}.",
-                canal_envio="Sistema",
-                fecha_envio=datetime.now()
-            )
-            db.session.add(notificacion)
+            # Reportar al Minsal usando el Controlador
+            from app.controllers import ControladorVacunacion
+            vacuna_obj = Vacuna.query.get(vacuna_id)
+            if vacuna_obj:
+                ControladorVacunacion.registrarDosis(cita.paciente.rut, vacuna_obj.id_minsal)
+            
+            # Patrón Factory Method: Crear y enviar notificación
+            from app.notificacion_factory import CreadorNotifEmail
+            creador = CreadorNotifEmail()
+            notificador = creador.crearNotificacion()
+            mensaje = f"Se ha completado exitosamente tu vacunación (Dosis {numero_dosis}) el {cita.fecha.strftime('%d/%m/%Y')}."
+            notificador.enviar(mensaje, cita.paciente)
+            
             db.session.commit()
             flash('¡La vacunación ha sido registrada exitosamente!')
             

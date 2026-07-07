@@ -23,7 +23,7 @@ if __name__ == '__main__':
             
         # Seed default vaccine
         if not Vacuna.query.first():
-            v1 = Vacuna(enfermedades=["COVID-19", "Influenza"])
+            v1 = Vacuna(enfermedades=["COVID-19", "Influenza"], id_minsal=0)
             db.session.add(v1)
             db.session.commit()
             
