@@ -19,8 +19,8 @@
                         <a href="{{ url_for('index') }}" class="text-2xl font-extrabold text-blue-600 tracking-tight">TuVacuna</a>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                        <a href="{{ url_for('index') }}" class="border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Inicio</a>
-                        <a href="{{ url_for('campaigns') }}" class="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium">Campañas</a>
+                        <a href="{{ url_for('index') }}" class="{{ 'border-blue-500 text-gray-900' if request.path in ['/', '/index', '/patient_dashboard'] else 'border-transparent text-gray-500 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Inicio</a>
+                        <a href="{{ url_for('campaigns') }}" class="{{ 'border-blue-500 text-gray-900' if request.path == '/campaigns' else 'border-transparent text-gray-500 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Campañas</a>
                     </div>
                 </div>
                 <div class="hidden sm:ml-6 sm:flex sm:items-center">
