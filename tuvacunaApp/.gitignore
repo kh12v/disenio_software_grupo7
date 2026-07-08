@@ -21,6 +21,3 @@ venv.bak/
 # IDEs
 .idea/
 .vscode/
-
-# TailwindCSS autogenerado
-app/static/css/output.css
