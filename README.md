@@ -1,5 +1,5 @@
 # disenio_software_grupo7
-Entrega 2 diseño de software grupo 7
+Entrega 3 diseño de software grupo 7
 
 # Para ejecutar
 - Ingresar a la carpeta /tuvacunaApp
