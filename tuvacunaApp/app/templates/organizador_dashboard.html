@@ -1,64 +1,365 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <div class="px-4 py-6 sm:px-0">
-        
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-blue-900">Gestión de Campañas</h1>
-            <a href="{{ url_for('create_campana') }}" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                + Nueva Campaña
-            </a>
-        </div>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-blue-100">
-            {% if campanas %}
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-blue-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Campaña</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Enfermedad Objetivo</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Población</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Fechas</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-blue-800 uppercase tracking-wider">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for campana in campanas %}
-                    <tr class="hover:bg-blue-50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-bold text-gray-900">{{ campana.nombre_campana }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                {{ campana.enfermedad_objetivo }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {{ campana.poblacion_objetivo }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ campana.fecha_inicio.strftime('%d/%m/%Y') }} - {{ campana.fecha_fin.strftime('%d/%m/%Y') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex justify-end space-x-2">
-                                <a href="{{ url_for('edit_campana', id=campana.id) }}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-md transition-colors">Editar</a>
-                                <form action="{{ url_for('delete_campana', id=campana.id) }}" method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta campaña?');">
-                                    <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded-md transition-colors">Eliminar</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="p-8 text-center text-gray-500">
-                <p class="text-lg">No hay campañas registradas en el sistema.</p>
-                <p class="mt-2 text-sm">Crea una nueva campaña para comenzar.</p>
+    .dashboard-container {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        max-width: 1000px;
+        margin: 3rem auto 5rem auto;
+        padding: 0 1rem;
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+
+    .dashboard-title {
+        color: #111827;
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .btn-new-appointment {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        padding: 0.875rem 1.75rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-new-appointment:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-new-appointment svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-icon {
+        width: 24px;
+        height: 24px;
+        color: #3b82f6;
+    }
+
+    .card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05),
+                    0 1px 3px rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(229, 231, 235, 0.8);
+        overflow: hidden;
+        margin-bottom: 3rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        gap: 1rem;
+        padding: 1.5rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stat-item {
+        border-radius: 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 1rem 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .stat-value {
+        color: #111827;
+        font-size: 1.35rem;
+        font-weight: 700;
+    }
+
+    .appointments-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .appointment-item {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s;
+        gap: 1rem;
+    }
+
+    .appointment-item:last-child {
+        border-bottom: none;
+    }
+
+    .appointment-item:hover {
+        background-color: #f9fafb;
+    }
+
+    .appointment-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+
+    .appointment-center {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .appointment-address {
+        font-size: 0.95rem;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .appointment-address svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .appointment-details {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.75rem;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.875rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        background-color: #d1fae5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+    }
+
+    .appointment-time {
+        font-size: 0.95rem;
+        color: #4b5563;
+        background: #f3f4f6;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .appointment-time strong {
+        color: #111827;
+    }
+
+    .campaign-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+    }
+
+    .action-link,
+    .action-button {
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #334155;
+        border-radius: 9999px;
+        padding: 0.55rem 0.95rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .action-link:hover,
+    .action-button:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
+
+    .action-button {
+        color: #dc2626;
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+
+    .action-button:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+    }
+
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+        color: #6b7280;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .empty-icon {
+        width: 48px;
+        height: 48px;
+        color: #9ca3af;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0;
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-size: 1rem;
+        max-width: 400px;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .appointment-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.25rem;
+        }
+
+        .appointment-details {
+            align-items: flex-start;
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Panel de Gestión de Campañas</h1>
+        <a href="{{ url_for('create_campana') }}" class="btn-new-appointment">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            Nueva campaña
+        </a>
+    </div>
+
+    <div class="section-title">
+        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M7 6V4a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10l-1 13a2 2 0 01-2 2H9a2 2 0 01-2-2L7 6z"></path></svg>
+        Resumen operativo
+    </div>
+
+    <div class="card">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-label">Campañas</span>
+                <span class="stat-value">{{ campanas|length if campanas else 0 }}</span>
             </div>
-            {% endif %}
+            <div class="stat-item">
+                <span class="stat-label">Estado</span>
+                <span class="stat-value">Operativo</span>
+            </div>
         </div>
+    </div>
+
+    <div class="section-title">
+        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        Campañas activas
+    </div>
+
+    <div class="card">
+        {% if campanas %}
+        <ul class="appointments-list">
+            {% for campana in campanas %}
+            <li class="appointment-item">
+                <div class="appointment-info">
+                    <div class="appointment-center">{{ campana.nombre_campana }}</div>
+                    <div class="appointment-address">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0l-2-4m-10 4l2-4"></path></svg>
+                        {{ campana.enfermedad_objetivo }}
+                    </div>
+                    <div class="appointment-address">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        {{ campana.poblacion_objetivo }}
+                    </div>
+                </div>
+                <div class="appointment-details">
+                    <span class="status-badge">Activa</span>
+                    <div class="appointment-time">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px; color: #6b7280;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <strong>{{ campana.fecha_inicio.strftime('%d/%m/%Y') }}</strong> - <strong>{{ campana.fecha_fin.strftime('%d/%m/%Y') }}</strong>
+                    </div>
+                    <div class="campaign-actions">
+                        <a href="{{ url_for('edit_campana', id=campana.id) }}" class="action-link">Editar</a>
+                        <form action="{{ url_for('delete_campana', id=campana.id) }}" method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta campaña?');">
+                            <button type="submit" class="action-button">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state">
+            <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
+            <h3>No hay campañas registradas</h3>
+            <p>Aún no tienes campañas creadas. Crea la primera para empezar a coordinarlas.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
