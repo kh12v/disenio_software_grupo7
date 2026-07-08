@@ -41,7 +41,7 @@ if __name__ == '__main__':
                 persona.set_clave_unica(u_data['password'])
                 db.session.add(persona)
                 
-                paciente = Paciente(rut=u_data['rut'], nombres=u_data['nombre'], correo=f"{u_data['role'].replace(' ', '_')}@example.com")
+                paciente = Paciente(rut=u_data['rut'], nombres=u_data['nombre'], correo=f"kvillalobos2024@inf.udec.cl")
                 db.session.add(paciente)
                 
                 if u_data['role'] == 'administrator':

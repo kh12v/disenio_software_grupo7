@@ -1,49 +1,337 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100">
-        <div class="bg-blue-600 px-6 py-4">
-            <h2 class="text-2xl font-bold text-white text-center">Solicitar Cita de Vacunación</h2>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    .appointment-container {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        max-width: 850px;
+        margin: 3rem auto 5rem auto;
+        padding: 0 1rem;
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .appointment-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08), 
+                    0 1px 3px rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(229, 231, 235, 0.8);
+        overflow: hidden;
+    }
+
+    .appointment-header {
+        background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+        padding: 3rem 2.5rem;
+        text-align: center;
+        position: relative;
+    }
+    
+    .appointment-header::after {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        background-image: radial-gradient(circle at 20% 150%, rgba(255,255,255,0.15) 0%, transparent 50%),
+                          radial-gradient(circle at 80% -50%, rgba(255,255,255,0.15) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .appointment-title {
+        color: #ffffff;
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        letter-spacing: -0.02em;
+        position: relative;
+        z-index: 10;
+    }
+
+    .appointment-subtitle {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 1.1rem;
+        margin: 0;
+        font-weight: 400;
+        position: relative;
+        z-index: 10;
+    }
+
+    .appointment-form {
+        padding: 3.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2.5rem;
+    }
+
+    @media (max-width: 640px) {
+        .appointment-form {
+            padding: 2rem 1.5rem;
+        }
+        .appointment-header {
+            padding: 2rem 1.5rem;
+        }
+        .appointment-title {
+            font-size: 1.75rem;
+        }
+    }
+
+    .form-group {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.875rem;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .form-group.disabled-group {
+        opacity: 0.4;
+        pointer-events: none;
+        transform: scale(0.98);
+    }
+
+    .form-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .step-indicator {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: #eff6ff;
+        color: #2563eb;
+        border-radius: 50%;
+        font-size: 0.875rem;
+        font-weight: 700;
+        border: 2px solid #dbeafe;
+        transition: all 0.3s ease;
+    }
+    
+    .form-group.completed .step-indicator {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+
+    .form-select {
+        appearance: none;
+        width: 100%;
+        padding: 1.125rem 1.5rem;
+        font-size: 1rem;
+        color: #1f2937;
+        background-color: #f9fafb;
+        border: 2px solid #e5e7eb;
+        border-radius: 14px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        font-family: inherit;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1.25rem center;
+        background-size: 1.25em;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .form-select:hover:not(:disabled) {
+        border-color: #cbd5e1;
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        background-color: #ffffff;
+    }
+
+    .form-select:disabled {
+        background-color: #f3f4f6;
+        color: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    .form-select option {
+        padding: 1rem;
+    }
+
+    .form-select option:disabled {
+        color: #9ca3af;
+        font-style: italic;
+    }
+
+    .status-message {
+        font-size: 0.875rem;
+        color: #10b981;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        opacity: 0;
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+        height: 0;
+        overflow: hidden;
+    }
+
+    .status-message.visible {
+        opacity: 1;
+        transform: translateY(0);
+        height: auto;
+        margin-top: 0.5rem;
+    }
+
+    .status-icon {
+        width: 18px;
+        height: 18px;
+        color: #10b981;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 2.5rem;
+        border-top: 1px solid #f3f4f6;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.875rem 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        font-family: inherit;
+        text-decoration: none;
+    }
+
+    .btn-cancel {
+        background-color: transparent;
+        color: #4b5563;
+        border: 2px solid transparent;
+    }
+
+    .btn-cancel:hover {
+        background-color: #f3f4f6;
+        color: #111827;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-submit:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-submit:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-submit:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        box-shadow: none;
+        opacity: 0.7;
+    }
+    
+    .btn-icon {
+        margin-left: 0.5rem;
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+</style>
+
+<div class="appointment-container">
+    <div class="appointment-card">
+        <div class="appointment-header">
+            <h2 class="appointment-title">Solicitar Cita Médica</h2>
+            <p class="appointment-subtitle">Programa tu vacunación de forma rápida y segura en tres sencillos pasos</p>
         </div>
         
-        <form class="p-8 space-y-6" method="POST">
-            <div>
-                <label for="campana_id" class="block text-sm font-medium text-gray-700">Selecciona la Campaña</label>
-                <select id="campana_id" name="campana_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md" required>
+        <form class="appointment-form" method="POST" id="appointmentForm">
+            <div class="form-group" id="group-campana">
+                <label for="campana_id" class="form-label">
+                    <span class="step-indicator" id="step-1">1</span>
+                    Selecciona la Campaña
+                </label>
+                <select id="campana_id" name="campana_id" class="form-select" required>
                     <option value="" disabled selected>-- Elige una campaña --</option>
                     {% for c in campanas %}
                     <option value="{{ c.id }}">{{ c.nombre_campana }} ({{ c.enfermedad_objetivo }})</option>
                     {% endfor %}
                 </select>
+                <div class="status-message" id="status-campana">
+                    <svg class="status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Campaña confirmada</span>
+                </div>
             </div>
 
-            <div>
-                <label for="centro_id" class="block text-sm font-medium text-gray-700">Centro de Vacunación</label>
-                <select id="centro_id" name="centro_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md" required>
-                    <option value="" disabled selected>-- Elige un centro --</option>
+            <div class="form-group disabled-group" id="group-centro">
+                <label for="centro_id" class="form-label">
+                    <span class="step-indicator" id="step-2">2</span>
+                    Centro de Vacunación
+                </label>
+                <select id="centro_id" name="centro_id" class="form-select" required disabled>
+                    <option value="" disabled selected>-- Primero elige una campaña --</option>
                     {% for cv in centros %}
                     <option value="{{ cv.id }}">{{ cv.nombre_centro }} - {{ cv.direccion }}</option>
                     {% endfor %}
                 </select>
+                <div class="status-message" id="status-centro">
+                    <svg class="status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Centro seleccionado</span>
+                </div>
             </div>
 
-            <div>
-                <label for="horario" class="block text-sm font-medium text-gray-700">Fecha y Hora Disponibles</label>
-                <select id="horario" name="horario" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md" required>
-                    <option value="" disabled selected>-- Elige un horario --</option>
+            <div class="form-group disabled-group" id="group-horario">
+                <label for="horario" class="form-label">
+                    <span class="step-indicator" id="step-3">3</span>
+                    Fecha y Hora Disponibles
+                </label>
+                <select id="horario" name="horario" class="form-select" required disabled>
+                    <option value="" disabled selected>-- Primero elige un centro --</option>
                     {% for h in horarios %}
                     <option value="{{ h.fecha }} {{ h.hora }}">{{ h.fecha }} a las {{ h.hora }}</option>
                     {% endfor %}
                 </select>
+                <div class="status-message" id="status-horario">
+                    <svg class="status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Horario reservado temporalmente</span>
+                </div>
             </div>
 
-            <div class="pt-4 flex justify-between">
-                <a href="{{ url_for('patient_dashboard') }}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <div class="form-actions">
+                <a href="{{ url_for('patient_dashboard') }}" class="btn btn-cancel">
                     Cancelar
                 </a>
-                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button type="submit" class="btn btn-submit" id="submitBtn" disabled>
                     Confirmar Cita
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
                 </button>
             </div>
         </form>
@@ -52,40 +340,121 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const citasOcupadas = {{ citas_ocupadas_por_centro|tojson }};
+        const citasOcupadas = {{ citas_ocupadas_por_centro|tojson|safe }};
+        const campanaSelect = document.getElementById('campana_id');
         const centroSelect = document.getElementById('centro_id');
         const horarioSelect = document.getElementById('horario');
+        const submitBtn = document.getElementById('submitBtn');
         
+        const groupCampana = document.getElementById('group-campana');
+        const groupCentro = document.getElementById('group-centro');
+        const groupHorario = document.getElementById('group-horario');
+        
+        const statusCampana = document.getElementById('status-campana');
+        const statusCentro = document.getElementById('status-centro');
+        const statusHorario = document.getElementById('status-horario');
+
+        // Logic for progressive disclosure and state visualization
+        campanaSelect.addEventListener('change', function() {
+            if(this.value) {
+                statusCampana.classList.add('visible');
+                groupCampana.classList.add('completed');
+                
+                centroSelect.disabled = false;
+                centroSelect.options[0].text = "-- Elige un centro --";
+                groupCentro.classList.remove('disabled-group');
+                
+                // Si cambiamos la campaña, resetear lo de abajo
+                if(centroSelect.value) {
+                    centroSelect.value = "";
+                    centroSelect.dispatchEvent(new Event('change'));
+                }
+            }
+            checkSubmitState();
+        });
+
         function actualizarHorarios() {
             const centroId = centroSelect.value;
             const ocupadas = citasOcupadas[centroId] || [];
             
+            let hasAvailable = false;
+
             for (let i = 0; i < horarioSelect.options.length; i++) {
                 const option = horarioSelect.options[i];
-                if (option.value === "") continue; // Skip placeholder
+                if (option.value === "") continue;
                 
                 if (ocupadas.includes(option.value)) {
                     option.disabled = true;
-                    if (!option.text.includes("(Reservado)")) {
-                        option.text = option.text + " (Reservado)";
+                    if (!option.text.includes("(Ocupado)")) {
+                        option.text = option.text + " (Ocupado)";
                     }
                 } else {
                     option.disabled = false;
-                    option.text = option.text.replace(" (Reservado)", "");
+                    option.text = option.text.replace(" (Ocupado)", "");
+                    hasAvailable = true;
                 }
             }
             
-            // Unselect if the currently selected option is now disabled
             if (horarioSelect.selectedIndex > 0 && horarioSelect.options[horarioSelect.selectedIndex].disabled) {
                 horarioSelect.selectedIndex = 0;
             }
+
+            if (!hasAvailable && centroSelect.value) {
+                horarioSelect.options[0].text = "-- No hay horarios disponibles --";
+            } else if (centroSelect.value) {
+                horarioSelect.options[0].text = "-- Elige un horario --";
+            }
         }
         
-        centroSelect.addEventListener('change', actualizarHorarios);
-        
-        // Ejecutar al cargar la página por si hay un centro pre-seleccionado
-        if (centroSelect.value) {
-            actualizarHorarios();
+        centroSelect.addEventListener('change', function() {
+            if(this.value) {
+                statusCentro.classList.add('visible');
+                groupCentro.classList.add('completed');
+                
+                horarioSelect.disabled = false;
+                groupHorario.classList.remove('disabled-group');
+                actualizarHorarios();
+                
+                // Reset horario si cambiamos el centro
+                if(horarioSelect.value) {
+                    horarioSelect.value = "";
+                    horarioSelect.dispatchEvent(new Event('change'));
+                }
+            } else {
+                statusCentro.classList.remove('visible');
+                groupCentro.classList.remove('completed');
+                
+                horarioSelect.disabled = true;
+                groupHorario.classList.add('disabled-group');
+                horarioSelect.value = "";
+                statusHorario.classList.remove('visible');
+                groupHorario.classList.remove('completed');
+            }
+            checkSubmitState();
+        });
+
+        horarioSelect.addEventListener('change', function() {
+            if(this.value) {
+                statusHorario.classList.add('visible');
+                groupHorario.classList.add('completed');
+            } else {
+                statusHorario.classList.remove('visible');
+                groupHorario.classList.remove('completed');
+            }
+            checkSubmitState();
+        });
+
+        function checkSubmitState() {
+            if (campanaSelect.value && centroSelect.value && horarioSelect.value) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+
+        // Run on load in case of pre-selected values
+        if (campanaSelect.value) {
+            campanaSelect.dispatchEvent(new Event('change'));
         }
     });
 </script>
