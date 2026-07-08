@@ -29,9 +29,9 @@ if __name__ == '__main__':
             
         # Seed default users
         default_users = [
-            {'rut': '00.000.000-0', 'role': 'administrator', 'password': '1234', 'nombre': 'Gabriela Arriaga'},
-            {'rut': '11.111.111-1', 'role': 'healthcare provider', 'password': '1234', 'nombre': 'Arcadio Quintana'},
-            {'rut': '22.222.222-2', 'role': 'patient', 'password': '1234', 'nombre': 'Jaime Alejo'}
+            {'rut': '00.000.000-0', 'role': 'administrator', 'password': '1234', 'nombre': 'Gabriela Arriaga', 'telefono': '144744664', 'fecha_nacimiento': date(1999, 1, 1)},
+            {'rut': '11.111.111-1', 'role': 'healthcare provider', 'password': '1234', 'nombre': 'Arcadio Quintana', 'telefono': '876545987', 'fecha_nacimiento': date(1999, 2, 2)},
+            {'rut': '22.222.222-2', 'role': 'patient', 'password': '1234', 'nombre': 'Jaime Alejo', 'telefono': '977854665', 'fecha_nacimiento': date(1999, 3, 3)}
         ]
         
         for u_data in default_users:
@@ -41,7 +41,7 @@ if __name__ == '__main__':
                 persona.set_clave_unica(u_data['password'])
                 db.session.add(persona)
                 
-                paciente = Paciente(rut=u_data['rut'], nombres=u_data['nombre'], correo=f"kvillalobos2024@inf.udec.cl")
+                paciente = Paciente(rut=u_data['rut'], nombres=u_data['nombre'], correo=f"kvillalobos2024@inf.udec.cl", telefono=u_data['telefono'], fecha_nacimiento=u_data['fecha_nacimiento'])
                 db.session.add(paciente)
                 
                 if u_data['role'] == 'administrator':
@@ -51,6 +51,12 @@ if __name__ == '__main__':
                     centro_prueba = CentroVacunacion.query.first()
                     especialista = EspecialistaSalud(rut=u_data['rut'], nombres=u_data['nombre'], especialidad='Medicina General', centro_id=centro_prueba.id if centro_prueba else None)
                     db.session.add(especialista)
+            else:
+                # Si la persona ya existe, actualizamos su información de paciente
+                paciente = Paciente.query.filter_by(rut=u_data['rut']).first()
+                if paciente:
+                    paciente.telefono = u_data.get('telefono', paciente.telefono)
+                    paciente.fecha_nacimiento = u_data.get('fecha_nacimiento', paciente.fecha_nacimiento)
                     
         db.session.commit()
         

@@ -1,50 +1,323 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <div class="px-4 py-6 sm:px-0">
-        
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-blue-900">Gestión de Campañas</h1>
-            <a href="{{ url_for('create_campana') }}" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                + Nueva Campaña
-            </a>
-        </div>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-blue-100">
-            {% if campanas %}
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-blue-50">
+    .dashboard-container {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        max-width: 1100px;
+        margin: 3rem auto 5rem auto;
+        padding: 0 1rem;
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+
+    .dashboard-title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .dashboard-icon {
+        width: 36px;
+        height: 36px;
+        color: #2563eb; /* Blue 600 */
+        background: #eff6ff; /* Blue 50 */
+        padding: 0.5rem;
+        border-radius: 12px;
+    }
+
+    .dashboard-title {
+        color: #1e3a8a; /* Blue 900 */
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    .table-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), 
+                    0 1px 3px rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(229, 231, 235, 0.8);
+        overflow: hidden;
+    }
+
+    .campaign-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        text-align: left;
+    }
+
+    .campaign-table th {
+        background: #f8fafc; /* Slate 50 */
+        color: #475569; /* Slate 600 */
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .campaign-table td {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background-color 0.2s;
+    }
+
+    .campaign-table tbody tr:hover td {
+        background-color: #f8fafc;
+    }
+    
+    .campaign-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .campaign-name {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 1.05rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .campaign-icon {
+        color: #3b82f6;
+        width: 20px;
+        height: 20px;
+    }
+
+    .target-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: #dcfce7; /* Green 100 */
+        color: #166534; /* Green 800 */
+        gap: 0.35rem;
+    }
+    
+    .target-badge::before {
+        content: '';
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #22c55e;
+    }
+
+    .population-text {
+        color: #475569;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .date-text {
+        color: #64748b;
+        font-size: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .date-row {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .date-icon {
+        width: 14px;
+        height: 14px;
+        color: #94a3b8;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem;
+        border-radius: 10px;
+        transition: all 0.2s;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-edit {
+        color: #4f46e5;
+        background: #e0e7ff;
+    }
+
+    .btn-edit:hover {
+        background: #4f46e5;
+        color: white;
+    }
+
+    .btn-delete {
+        color: #e11d48;
+        background: #ffe4e6;
+    }
+
+    .btn-delete:hover {
+        background: #e11d48;
+        color: white;
+    }
+
+    .empty-state {
+        padding: 5rem 2rem;
+        text-align: center;
+        color: #64748b;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    .empty-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        background: #eff6ff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-icon {
+        width: 40px;
+        height: 40px;
+        color: #3b82f6;
+    }
+
+    .empty-state h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin: 0;
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-size: 1.05rem;
+        max-width: 450px;
+        line-height: 1.5;
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="dashboard-title-wrapper">
+            <svg class="dashboard-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <h1 class="dashboard-title">Gestión de Campañas</h1>
+        </div>
+        <a href="{{ url_for('create_campana') }}" class="btn-primary">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Nueva Campaña
+        </a>
+    </div>
+
+    <div class="table-card">
+        {% if campanas %}
+        <div style="overflow-x: auto;">
+            <table class="campaign-table">
+                <thead>
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Campaña</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Enfermedad Objetivo</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Población</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Fechas</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-blue-800 uppercase tracking-wider">Acciones</th>
+                        <th>Campaña</th>
+                        <th>Enfermedad Objetivo</th>
+                        <th>Población Objetivo</th>
+                        <th>Período</th>
+                        <th style="text-align: right;">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody>
                     {% for campana in campanas %}
-                    <tr class="hover:bg-blue-50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-bold text-gray-900">{{ campana.nombre_campana }}</div>
+                    <tr>
+                        <td>
+                            <div class="campaign-name">
+                                <svg class="campaign-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                {{ campana.nombre_campana }}
+                            </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        <td>
+                            <span class="target-badge">
                                 {{ campana.enfermedad_objetivo }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {{ campana.poblacion_objetivo }}
+                        <td>
+                            <span class="population-text">{{ campana.poblacion_objetivo }}</span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ campana.fecha_inicio.strftime('%d/%m/%Y') }} - {{ campana.fecha_fin.strftime('%d/%m/%Y') }}
+                        <td>
+                            <div class="date-text">
+                                <div class="date-row">
+                                    <svg class="date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    Inicio: <strong style="color: #475569;">{{ campana.fecha_inicio.strftime('%d/%m/%Y') }}</strong>
+                                </div>
+                                <div class="date-row">
+                                    <svg class="date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Fin: <strong style="color: #475569;">{{ campana.fecha_fin.strftime('%d/%m/%Y') }}</strong>
+                                </div>
+                            </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex justify-end space-x-2">
-                                <a href="{{ url_for('edit_campana', id=campana.id) }}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-md transition-colors">Editar</a>
-                                <form action="{{ url_for('delete_campana', id=campana.id) }}" method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta campaña?');">
-                                    <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded-md transition-colors">Eliminar</button>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('edit_campana', id=campana.id) }}" class="btn-action btn-edit" title="Editar">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </a>
+                                <form action="{{ url_for('delete_campana', id=campana.id) }}" method="POST" class="inline" style="margin:0;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar la campaña &quot;{{ campana.nombre_campana }}&quot;? Esta acción no se puede deshacer.');">
+                                    <button type="submit" class="btn-action btn-delete" title="Eliminar">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
                                 </form>
                             </div>
                         </td>
@@ -52,13 +325,16 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {% else %}
-            <div class="p-8 text-center text-gray-500">
-                <p class="text-lg">No hay campañas registradas en el sistema.</p>
-                <p class="mt-2 text-sm">Crea una nueva campaña para comenzar.</p>
-            </div>
-            {% endif %}
         </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon-wrapper">
+                <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            </div>
+            <h3>Ninguna Campaña Activa</h3>
+            <p>Aún no hay campañas de vacunación registradas en el sistema. Puedes empezar creando una nueva campaña para gestionar la logística y población objetivo.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
