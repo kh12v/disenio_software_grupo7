@@ -29,9 +29,9 @@ if __name__ == '__main__':
             
         # Seed default users
         default_users = [
-            {'rut': '00.000.000-0', 'role': 'administrator', 'password': '1234', 'nombre': 'Admin User'},
-            {'rut': '11.111.111-1', 'role': 'healthcare provider', 'password': '1234', 'nombre': 'Doctor User'},
-            {'rut': '22.222.222-2', 'role': 'patient', 'password': '1234', 'nombre': 'Patient User'}
+            {'rut': '00.000.000-0', 'role': 'administrator', 'password': '1234', 'nombre': 'Gabriela Arriaga'},
+            {'rut': '11.111.111-1', 'role': 'healthcare provider', 'password': '1234', 'nombre': 'Arcadio Quintana'},
+            {'rut': '22.222.222-2', 'role': 'patient', 'password': '1234', 'nombre': 'Jaime Alejo'}
         ]
         
         for u_data in default_users:
